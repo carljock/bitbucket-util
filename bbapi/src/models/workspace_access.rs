@@ -17,7 +17,7 @@ pub struct WorkspaceAccess {
     pub r#type: String,
     /// The permission level the user has for the workspace. \"True\" if the user is an administrator, otherwise \"False\".
     #[serde(rename = "administrator", skip_serializing_if = "Option::is_none")]
-    pub administrator: Option<String>,
+    pub administrator: Option<bool>,
     #[serde(rename = "workspace", skip_serializing_if = "Option::is_none")]
     pub workspace: Option<Box<models::WorkspaceBase>>,
 }
