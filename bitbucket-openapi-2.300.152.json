@@ -37650,7 +37650,7 @@
             "description": "A Bitbucket workspace permission for a user.",
             "properties": {
               "administrator": {
-                "type": "string",
+                "type": "boolean",
                 "description": "The permission level the user has for the workspace. \"True\" if the user is an administrator, otherwise \"False\"."
               },
               "workspace": {
