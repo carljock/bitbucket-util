@@ -22,13 +22,18 @@ pub fn write_pull_requests<W: Write>(
     pull_requests: &[PullRequestRow],
 ) -> io::Result<()> {
     for pull_request in pull_requests {
-        writeln!(
-            writer,
+        let label = format!(
             "{} {} {}",
             pull_request.id,
             pull_request.state,
             pull_request.title.as_deref().unwrap_or_default()
-        )?;
+        );
+
+        if let Some(url) = &pull_request.html_url {
+            writeln!(writer, "{}", osc8_link(label.as_str(), url.as_str()))?;
+        } else {
+            writeln!(writer, "{label}")?;
+        }
     }
 
     Ok(())
@@ -43,6 +48,10 @@ pub fn write_pull_requests_json<W: Write>(
     serde_json::to_writer(&mut writer, &rows)?;
     writeln!(writer)?;
     Ok(())
+}
+
+fn osc8_link(label: &str, url: &str) -> String {
+    format!("\u{1b}]8;;{url}\u{1b}\\{label}\u{1b}]8;;\u{1b}\\")
 }
 
 #[cfg(test)]
@@ -132,6 +141,7 @@ mod tests {
                 id: 123,
                 title: Some("Fix auth bug".into()),
                 state: "OPEN".into(),
+                html_url: Some("https://bitbucket.org/acme/api/pull-requests/123".into()),
                 author_display_name: None,
                 source_branch: None,
                 destination_branch: None,
@@ -147,6 +157,7 @@ mod tests {
                 id: 124,
                 title: None,
                 state: "UNKNOWN".into(),
+                html_url: None,
                 author_display_name: None,
                 source_branch: None,
                 destination_branch: None,
@@ -162,7 +173,15 @@ mod tests {
         write_pull_requests(&mut buf, &pull_requests).expect("write should succeed");
 
         let rendered = String::from_utf8(buf).expect("utf8 output");
-        assert_eq!(rendered, "123 OPEN Fix auth bug\n124 UNKNOWN \n");
+        assert_eq!(
+            rendered,
+            concat!(
+                "\u{1b}]8;;https://bitbucket.org/acme/api/pull-requests/123\u{1b}\\",
+                "123 OPEN Fix auth bug",
+                "\u{1b}]8;;\u{1b}\\\n",
+                "124 UNKNOWN \n"
+            )
+        );
     }
 
     #[test]
@@ -173,6 +192,7 @@ mod tests {
             id: 123,
             title: Some("Fix auth bug".into()),
             state: "OPEN".into(),
+            html_url: Some("https://bitbucket.org/acme/api/pull-requests/123".into()),
             author_display_name: Some("Alice".into()),
             source_branch: Some("feature/auth".into()),
             destination_branch: Some("main".into()),

@@ -279,6 +279,10 @@ fn pull_request_to_row(
         id,
         title: pull_request.title,
         state: pull_request_state_label(pull_request.state),
+        html_url: pull_request
+            .links
+            .and_then(|links| links.html)
+            .and_then(|link| link.href),
         author_display_name: pull_request.author.and_then(|account| account.display_name),
         source_branch: pull_request
             .source
@@ -530,6 +534,13 @@ mod tests {
             id: Some(42),
             title: Some("Improve auth".into()),
             state: Some(models::pullrequest::State::Open),
+            links: Some(Box::new(models::PullRequestLinks {
+                html: Some(Box::new(models::Link1 {
+                    href: Some("https://bitbucket.org/acme/api/pull-requests/42".into()),
+                    ..Default::default()
+                })),
+                ..Default::default()
+            })),
             author: Some(Box::new(models::Account {
                 r#type: "account".into(),
                 display_name: Some("Alice".into()),
@@ -561,6 +572,10 @@ mod tests {
 
         assert_eq!(row.id, 42);
         assert_eq!(row.state, "OPEN");
+        assert_eq!(
+            row.html_url.as_deref(),
+            Some("https://bitbucket.org/acme/api/pull-requests/42")
+        );
         assert_eq!(row.author_display_name.as_deref(), Some("Alice"));
         assert_eq!(row.source_branch.as_deref(), Some("feature/auth"));
         assert_eq!(row.destination_branch.as_deref(), Some("main"));
