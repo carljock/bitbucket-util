@@ -1,5 +1,5 @@
 const USAGE: &str =
-    "Usage:\n  bb repos list [--workspace <slug>] [--role <member|contributor|admin|owner>]";
+    "Usage:\n  bb repo list [--workspace <slug>] [--role <member|contributor|admin|owner>]";
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum RepoRole {
@@ -47,7 +47,7 @@ pub fn parse_args(args: impl IntoIterator<Item = String>) -> Result<Command, Str
         return Err(format!("missing command\n\n{USAGE}"));
     }
 
-    if args[0] != "repos" || args[1] != "list" {
+    if args[0] != "repo" || args[1] != "list" {
         return Err(format!("unsupported command\n\n{USAGE}"));
     }
 
@@ -87,8 +87,8 @@ mod tests {
     use super::{Command, RepoRole, parse_args};
 
     #[test]
-    fn parses_minimal_repos_list() {
-        let cmd = parse_args(vec!["repos".into(), "list".into()]).expect("parse should work");
+    fn parses_minimal_repo_list() {
+        let cmd = parse_args(vec!["repo".into(), "list".into()]).expect("parse should work");
 
         assert_eq!(
             cmd,
@@ -102,7 +102,7 @@ mod tests {
     #[test]
     fn parses_optional_flags() {
         let cmd = parse_args(vec![
-            "repos".into(),
+            "repo".into(),
             "list".into(),
             "--workspace".into(),
             "acme".into(),
