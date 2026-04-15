@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct WorkspaceRef {
     pub slug: String,
@@ -12,6 +14,11 @@ pub struct RepoRow {
     pub name: Option<String>,
     pub description: Option<String>,
     pub is_private: Option<bool>,
+    pub language: Option<String>,
+    pub updated_on: Option<String>,
+    pub main_branch: Option<String>,
+    pub clone_https: Option<String>,
+    pub clone_ssh: Option<String>,
 }
 
 impl RepoRow {
@@ -23,6 +30,45 @@ impl RepoRow {
         }
 
         format!("{}/{}", self.workspace_slug, self.repo_slug)
+    }
+
+    pub fn visibility(&self) -> Option<&'static str> {
+        match self.is_private {
+            Some(true) => Some("private"),
+            Some(false) => Some("public"),
+            None => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+pub struct RepoJsonRow {
+    pub full_name: Option<String>,
+    pub workspace_slug: String,
+    pub repo_slug: String,
+    pub description: Option<String>,
+    pub visibility: Option<&'static str>,
+    pub language: Option<String>,
+    pub main_branch: Option<String>,
+    pub updated_on: Option<String>,
+    pub clone_https: Option<String>,
+    pub clone_ssh: Option<String>,
+}
+
+impl From<&RepoRow> for RepoJsonRow {
+    fn from(value: &RepoRow) -> Self {
+        Self {
+            full_name: value.full_name.clone(),
+            workspace_slug: value.workspace_slug.clone(),
+            repo_slug: value.repo_slug.clone(),
+            description: value.description.clone(),
+            visibility: value.visibility(),
+            language: value.language.clone(),
+            main_branch: value.main_branch.clone(),
+            updated_on: value.updated_on.clone(),
+            clone_https: value.clone_https.clone(),
+            clone_ssh: value.clone_ssh.clone(),
+        }
     }
 }
 
@@ -50,6 +96,11 @@ mod tests {
             name: None,
             description: None,
             is_private: None,
+            language: None,
+            updated_on: None,
+            main_branch: None,
+            clone_https: None,
+            clone_ssh: None,
         }
     }
 
@@ -63,6 +114,19 @@ mod tests {
     fn display_name_falls_back_to_workspace_and_slug() {
         let row = repo("acme", "app", None);
         assert_eq!(row.display_name(), "acme/app");
+    }
+
+    #[test]
+    fn visibility_maps_private_flag() {
+        let mut row = repo("acme", "app", Some("acme/app"));
+        row.is_private = Some(true);
+        assert_eq!(row.visibility(), Some("private"));
+
+        row.is_private = Some(false);
+        assert_eq!(row.visibility(), Some("public"));
+
+        row.is_private = None;
+        assert_eq!(row.visibility(), None);
     }
 
     #[test]

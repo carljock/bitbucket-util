@@ -33,15 +33,18 @@ async fn main() {
 }
 
 async fn run() -> Result<(), BbcliError> {
-    let command = parse_args(std::env::args().skip(1).collect::<Vec<_>>())
+    let parsed = parse_args(std::env::args().skip(1).collect::<Vec<_>>())
         .map_err(|message| BbcliError::Cli { message })?;
 
-    match command {
-        Command::ReposList { workspace, role } => run_repos_list(workspace, role).await,
+    match parsed.command {
+        Command::ReposList { workspace, role } => {
+            run_repos_list(parsed.json, workspace, role).await
+        }
     }
 }
 
 async fn run_repos_list(
+    json: bool,
     workspace: Option<String>,
     role: Option<cli::RepoRole>,
 ) -> Result<(), BbcliError> {
@@ -52,6 +55,11 @@ async fn run_repos_list(
         .list_accessible_repositories(workspace.as_deref(), role.map(|r| r.as_api_value()))
         .await?;
 
-    output::write_repositories(std::io::stdout(), repositories.as_slice())
-        .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    if json {
+        output::write_repositories_json(std::io::stdout(), repositories.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_repositories(std::io::stdout(), repositories.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
 }

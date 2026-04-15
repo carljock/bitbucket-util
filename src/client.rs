@@ -181,6 +181,10 @@ fn repository_to_repo_row(workspace_slug: &str, repository: models::Repository) 
     let name = repository.name;
     let description = repository.description;
     let is_private = repository.is_private;
+    let language = repository.language;
+    let updated_on = repository.updated_on;
+    let main_branch = repository.mainbranch.and_then(|branch| branch.name);
+    let (clone_https, clone_ssh) = extract_clone_urls(repository.links);
 
     let repo_slug = derive_repo_slug(
         full_name.as_deref(),
@@ -195,7 +199,33 @@ fn repository_to_repo_row(workspace_slug: &str, repository: models::Repository) 
         name,
         description,
         is_private,
+        language,
+        updated_on,
+        main_branch,
+        clone_https,
+        clone_ssh,
     })
+}
+
+fn extract_clone_urls(
+    links: Option<Box<models::RepositoryLinks>>,
+) -> (Option<String>, Option<String>) {
+    let mut clone_https = None;
+    let mut clone_ssh = None;
+
+    if let Some(links) = links {
+        if let Some(clone_links) = links.clone {
+            for link in clone_links {
+                match link.name.as_deref() {
+                    Some("https") => clone_https = link.href,
+                    Some("ssh") => clone_ssh = link.href,
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    (clone_https, clone_ssh)
 }
 
 fn derive_repo_slug(
@@ -262,7 +292,7 @@ fn map_sdk_error<T: std::fmt::Debug>(context: &'static str, error: apis::Error<T
 
 #[cfg(test)]
 mod tests {
-    use super::derive_repo_slug;
+    use super::{derive_repo_slug, extract_clone_urls, repository_to_repo_row};
     use bbapi::models;
 
     #[test]
@@ -309,5 +339,66 @@ mod tests {
         let values = page.values.expect("values should be present");
         assert_eq!(values.len(), 1);
         assert_eq!(values[0].administrator, Some(false));
+    }
+
+    #[test]
+    fn extract_clone_urls_picks_https_and_ssh() {
+        let links = models::RepositoryLinks {
+            clone: Some(vec![
+                models::Link1 {
+                    href: Some("https://bitbucket.org/acme/repo.git".into()),
+                    name: Some("https".into()),
+                },
+                models::Link1 {
+                    href: Some("git@bitbucket.org:acme/repo.git".into()),
+                    name: Some("ssh".into()),
+                },
+            ]),
+            ..Default::default()
+        };
+
+        let (https, ssh) = extract_clone_urls(Some(Box::new(links)));
+        assert_eq!(https.as_deref(), Some("https://bitbucket.org/acme/repo.git"));
+        assert_eq!(ssh.as_deref(), Some("git@bitbucket.org:acme/repo.git"));
+    }
+
+    #[test]
+    fn repository_to_repo_row_maps_extended_json_fields() {
+        let repository = models::Repository {
+            r#type: "repository".into(),
+            uuid: Some("{abc}".into()),
+            full_name: Some("acme/repo".into()),
+            name: Some("repo".into()),
+            description: Some("desc".into()),
+            is_private: Some(false),
+            language: Some("rust".into()),
+            updated_on: Some("2026-04-15T12:00:00+00:00".into()),
+            mainbranch: Some(Box::new(models::Branch {
+                r#type: "branch".into(),
+                name: Some("main".into()),
+                ..Default::default()
+            })),
+            links: Some(Box::new(models::RepositoryLinks {
+                clone: Some(vec![
+                    models::Link1 {
+                        href: Some("https://bitbucket.org/acme/repo.git".into()),
+                        name: Some("https".into()),
+                    },
+                    models::Link1 {
+                        href: Some("git@bitbucket.org:acme/repo.git".into()),
+                        name: Some("ssh".into()),
+                    },
+                ]),
+                ..Default::default()
+            })),
+            ..Default::default()
+        };
+
+        let row = repository_to_repo_row("acme", repository).expect("row should be created");
+        assert_eq!(row.language.as_deref(), Some("rust"));
+        assert_eq!(row.updated_on.as_deref(), Some("2026-04-15T12:00:00+00:00"));
+        assert_eq!(row.main_branch.as_deref(), Some("main"));
+        assert_eq!(row.clone_https.as_deref(), Some("https://bitbucket.org/acme/repo.git"));
+        assert_eq!(row.clone_ssh.as_deref(), Some("git@bitbucket.org:acme/repo.git"));
     }
 }
