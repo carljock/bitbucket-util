@@ -1,6 +1,6 @@
 [package]
 name = "bbapi"
-version = "2.300.152"
+version = "2.300.163"
 authors = ["support@bitbucket.org"]
 description = "Code against the Bitbucket API to automate simple tasks, embed Bitbucket data into your own site, build mobile or desktop apps, or even add custom UI add-ons into Bitbucket itself using the Connect framework."
 # Override this license by providing a License Object in the OpenAPI.

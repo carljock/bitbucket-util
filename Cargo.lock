@@ -47,7 +47,7 @@ dependencies = [
 
 [[package]]
 name = "bbapi"
-version = "2.300.152"
+version = "2.300.163"
 dependencies = [
  "reqwest",
  "serde",

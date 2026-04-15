@@ -22,6 +22,7 @@ Method | HTTP request | Description
 [**workspaces_workspace_projects_get**](WorkspacesApi.md#workspaces_workspace_projects_get) | **GET** /workspaces/{workspace}/projects | List projects in a workspace
 [**workspaces_workspace_projects_project_key_get**](WorkspacesApi.md#workspaces_workspace_projects_project_key_get) | **GET** /workspaces/{workspace}/projects/{project_key} | Get a project for a workspace
 [**workspaces_workspace_pullrequests_selected_user_get**](WorkspacesApi.md#workspaces_workspace_pullrequests_selected_user_get) | **GET** /workspaces/{workspace}/pullrequests/{selected_user} | List workspace pull requests for a user
+[**workspaces_workspace_settings_gpg_public_key_get**](WorkspacesApi.md#workspaces_workspace_settings_gpg_public_key_get) | **GET** /workspaces/{workspace}/settings/gpg/public-key | Get the workspace system GPG public key(s)
 
 
 
@@ -569,6 +570,36 @@ Name | Type | Description  | Required | Notes
 ### Return type
 
 [**models::PaginatedPullrequests**](paginated_pullrequests.md)
+
+### Authorization
+
+[api_key](../README.md#api_key), [oauth2](../README.md#oauth2), [basic](../README.md#basic)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## workspaces_workspace_settings_gpg_public_key_get
+
+> workspaces_workspace_settings_gpg_public_key_get(workspace)
+Get the workspace system GPG public key(s)
+
+Returns the system public GPG key(s). In most cases a single key is returned. During a key rotation period, two keys may be returned.
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**workspace** | **String** | This can either be the workspace ID (slug) or the workspace UUID surrounded by curly-braces, for example: `{workspace UUID}`.  | [required] |
+
+### Return type
+
+ (empty response body)
 
 ### Authorization
 

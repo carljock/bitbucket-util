@@ -1,5 +1,5 @@
 # linked at https://developer.atlassian.com/cloud/bitbucket/rest/
-BITBUCKET_API_VERSION=2.300.152
+BITBUCKET_API_VERSION=2.300.163
 
 .PHONY: all
 all: bbapi

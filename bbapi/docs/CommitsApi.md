@@ -744,7 +744,7 @@ Name | Type | Description  | Required | Notes
 **binary** | Option<**bool**> | Generate diffs that include binary files, true if omitted. |  |
 **renames** | Option<**bool**> | Whether to perform rename detection, true if omitted. |  |
 **merge** | Option<**bool**> | This parameter is deprecated. The 'topic' parameter should be used instead. The 'merge' and 'topic' parameters cannot be both used at the same time.  If true, the source commit is merged into the destination commit, and then a diff from the destination to the merge result is returned. If false, a simple 'two dot' diff between the source and destination is returned. True if omitted. |  |
-**topic** | Option<**bool**> | If true, returns 2-way 'three-dot' diff. This is a diff between the source commit and the merge base of the source commit and the destination commit. If false, a simple 'two dot' diff between the source and destination is returned. |  |
+**topic** | Option<**bool**> | If true, returns 2-way 'three-dot' diff. This is a diff between the source commit and the merge base of the source commit and the destination commit. If false, a simple 'two dot' diff between the source and destination is returned.  If omitted, defaults to true, ie. a 2 way 'three-dot' diff is returned.  |  |
 
 ### Return type
 

@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 pub struct WorkspaceAccess {
     #[serde(rename = "type")]
     pub r#type: String,
-    /// The permission level the user has for the workspace. \"True\" if the user is an administrator, otherwise \"False\".
+    /// The permission level the user has for the workspace. True if the user is an administrator, otherwise False.
     #[serde(rename = "administrator", skip_serializing_if = "Option::is_none")]
     pub administrator: Option<bool>,
     #[serde(rename = "workspace", skip_serializing_if = "Option::is_none")]

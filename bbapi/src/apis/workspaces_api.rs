@@ -169,6 +169,16 @@ pub enum WorkspacesWorkspacePullrequestsSelectedUserGetError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`workspaces_workspace_settings_gpg_public_key_get`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum WorkspacesWorkspaceSettingsGpgPublicKeyGetError {
+    Status401(models::Error),
+    Status403(models::Error),
+    Status404(models::Error),
+    UnknownValue(serde_json::Value),
+}
+
 
 /// **This endpoint is deprecated. Please use the supported alternatives:** * [List workspaces for user](/cloud/bitbucket/rest/api-group-workspaces/#api-user-workspaces-get) * [Get user permission on a workspace](/cloud/bitbucket/rest/api-group-workspaces/#api-user-workspaces-workspace-permission-get)  Returns an object for each workspace the caller is a member of, and their effective role - the highest level of privilege the caller has. If a user is a member of multiple groups with distinct roles, only the highest level is returned.  Permissions can be:  * `owner` * `collaborator` * `member`  **The `collaborator` role is being removed from the Bitbucket Cloud API. For more information, see the [deprecation announcement](/cloud/bitbucket/deprecation-notice-collaborator-role/).**  **When you move your administration from Bitbucket Cloud to admin.atlassian.com, the following fields on `workspace_membership` will no longer be present: `last_accessed` and `added_on`. See the [deprecation announcement](/cloud/bitbucket/announcement-breaking-change-workspace-membership/).**  Results may be further [filtered or sorted](/cloud/bitbucket/rest/intro/#filtering) by workspace or permission by adding the following query string parameters:  * `q=workspace.slug=\"bbworkspace1\"` or `q=permission=\"owner\"` * `sort=workspace.slug`  Note that the query parameter values need to be URL escaped so that `=` would become `%3D`.
 #[deprecated]
@@ -1131,6 +1141,46 @@ pub async fn workspaces_workspace_pullrequests_selected_user_get(configuration: 
     } else {
         let content = resp.text().await?;
         let entity: Option<WorkspacesWorkspacePullrequestsSelectedUserGetError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
+/// Returns the system public GPG key(s). In most cases a single key is returned. During a key rotation period, two keys may be returned.
+pub async fn workspaces_workspace_settings_gpg_public_key_get(configuration: &configuration::Configuration, workspace: &str) -> Result<(), Error<WorkspacesWorkspaceSettingsGpgPublicKeyGetError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_workspace = workspace;
+
+    let uri_str = format!("{}/workspaces/{workspace}/settings/gpg/public-key", configuration.base_path, workspace=crate::apis::urlencode(p_path_workspace));
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("Authorization", value);
+    };
+    if let Some(ref token) = configuration.oauth_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    if let Some(ref auth_conf) = configuration.basic_auth {
+        req_builder = req_builder.basic_auth(auth_conf.0.to_owned(), auth_conf.1.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<WorkspacesWorkspaceSettingsGpgPublicKeyGetError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent { status, content, entity }))
     }
 }
