@@ -3,7 +3,7 @@ use bbapi::models;
 use serde::de::DeserializeOwned;
 
 use crate::error::BbcliError;
-use crate::model::{RepoRow, WorkspaceRef, normalize_repositories};
+use crate::model::{PullRequestRow, RepoRow, WorkspaceRef, normalize_repositories};
 
 pub struct BitbucketClient {
     config: Configuration,
@@ -15,6 +15,11 @@ impl BitbucketClient {
         config.user_agent = Some(format!("bb/{}", env!("CARGO_PKG_VERSION")));
         config.basic_auth = Some((login, Some(token)));
 
+        Self { config }
+    }
+
+    #[cfg(test)]
+    fn from_configuration(config: Configuration) -> Self {
         Self { config }
     }
 
@@ -101,6 +106,44 @@ impl BitbucketClient {
         Ok(repos)
     }
 
+    pub async fn list_pull_requests_in_repository(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        state: Option<&str>,
+    ) -> Result<Vec<PullRequestRow>, BbcliError> {
+        let mut page = apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_get(
+            &self.config,
+            repo_slug,
+            workspace_slug,
+            state,
+        )
+        .await
+        .map_err(|err| map_sdk_error("list pull requests", err))?;
+
+        let mut pull_requests = pull_request_rows_from_values(
+            workspace_slug,
+            repo_slug,
+            page.values.take().unwrap_or_default(),
+        );
+        let mut next = page.next.take();
+
+        while let Some(next_url) = next {
+            let mut next_page: models::PaginatedPullrequests = self
+                .fetch_page(next_url.as_str(), "list pull requests pagination")
+                .await?;
+
+            pull_requests.extend(pull_request_rows_from_values(
+                workspace_slug,
+                repo_slug,
+                next_page.values.take().unwrap_or_default(),
+            ));
+            next = next_page.next.take();
+        }
+
+        Ok(pull_requests)
+    }
+
     async fn fetch_page<T: DeserializeOwned>(
         &self,
         url: &str,
@@ -176,6 +219,22 @@ fn repo_rows_from_values(workspace_slug: &str, values: Vec<models::Repository>) 
     repos
 }
 
+fn pull_request_rows_from_values(
+    workspace_slug: &str,
+    repo_slug: &str,
+    values: Vec<models::Pullrequest>,
+) -> Vec<PullRequestRow> {
+    let mut pull_requests = Vec::new();
+
+    for pull_request in values {
+        if let Some(row) = pull_request_to_row(workspace_slug, repo_slug, pull_request) {
+            pull_requests.push(row);
+        }
+    }
+
+    pull_requests
+}
+
 fn repository_to_repo_row(workspace_slug: &str, repository: models::Repository) -> Option<RepoRow> {
     let full_name = repository.full_name;
     let name = repository.name;
@@ -205,6 +264,49 @@ fn repository_to_repo_row(workspace_slug: &str, repository: models::Repository) 
         clone_https,
         clone_ssh,
     })
+}
+
+fn pull_request_to_row(
+    workspace_slug: &str,
+    repo_slug: &str,
+    pull_request: models::Pullrequest,
+) -> Option<PullRequestRow> {
+    let id = pull_request.id?;
+
+    Some(PullRequestRow {
+        workspace_slug: workspace_slug.to_owned(),
+        repo_slug: repo_slug.to_owned(),
+        id,
+        title: pull_request.title,
+        state: pull_request_state_label(pull_request.state),
+        author_display_name: pull_request.author.and_then(|account| account.display_name),
+        source_branch: pull_request
+            .source
+            .and_then(|endpoint| endpoint.branch)
+            .and_then(|branch| branch.name),
+        destination_branch: pull_request
+            .destination
+            .and_then(|endpoint| endpoint.branch)
+            .and_then(|branch| branch.name),
+        draft: pull_request.draft,
+        comment_count: pull_request.comment_count,
+        task_count: pull_request.task_count,
+        created_on: pull_request.created_on,
+        updated_on: pull_request.updated_on,
+    })
+}
+
+fn pull_request_state_label(state: Option<models::pullrequest::State>) -> String {
+    match state {
+        Some(models::pullrequest::State::Open) => "OPEN",
+        Some(models::pullrequest::State::Draft) => "DRAFT",
+        Some(models::pullrequest::State::Queued) => "QUEUED",
+        Some(models::pullrequest::State::Merged) => "MERGED",
+        Some(models::pullrequest::State::Declined) => "DECLINED",
+        Some(models::pullrequest::State::Superseded) => "SUPERSEDED",
+        None => "UNKNOWN",
+    }
+    .to_owned()
 }
 
 fn extract_clone_urls(
@@ -292,8 +394,18 @@ fn map_sdk_error<T: std::fmt::Debug>(context: &'static str, error: apis::Error<T
 
 #[cfg(test)]
 mod tests {
-    use super::{derive_repo_slug, extract_clone_urls, repository_to_repo_row};
+    use std::io::{Read, Write};
+    use std::net::TcpListener;
+    use std::sync::{Arc, Mutex};
+    use std::thread;
+
+    use super::{
+        BitbucketClient, derive_repo_slug, extract_clone_urls, pull_request_to_row,
+        repository_to_repo_row,
+    };
+    use bbapi::apis::configuration::Configuration;
     use bbapi::models;
+    use tokio::runtime::Runtime;
 
     #[test]
     fn derive_repo_slug_prefers_full_name_suffix() {
@@ -358,7 +470,10 @@ mod tests {
         };
 
         let (https, ssh) = extract_clone_urls(Some(Box::new(links)));
-        assert_eq!(https.as_deref(), Some("https://bitbucket.org/acme/repo.git"));
+        assert_eq!(
+            https.as_deref(),
+            Some("https://bitbucket.org/acme/repo.git")
+        );
         assert_eq!(ssh.as_deref(), Some("git@bitbucket.org:acme/repo.git"));
     }
 
@@ -398,7 +513,123 @@ mod tests {
         assert_eq!(row.language.as_deref(), Some("rust"));
         assert_eq!(row.updated_on.as_deref(), Some("2026-04-15T12:00:00+00:00"));
         assert_eq!(row.main_branch.as_deref(), Some("main"));
-        assert_eq!(row.clone_https.as_deref(), Some("https://bitbucket.org/acme/repo.git"));
-        assert_eq!(row.clone_ssh.as_deref(), Some("git@bitbucket.org:acme/repo.git"));
+        assert_eq!(
+            row.clone_https.as_deref(),
+            Some("https://bitbucket.org/acme/repo.git")
+        );
+        assert_eq!(
+            row.clone_ssh.as_deref(),
+            Some("git@bitbucket.org:acme/repo.git")
+        );
+    }
+
+    #[test]
+    fn pull_request_to_row_maps_extended_json_fields() {
+        let pull_request = models::Pullrequest {
+            r#type: "pullrequest".into(),
+            id: Some(42),
+            title: Some("Improve auth".into()),
+            state: Some(models::pullrequest::State::Open),
+            author: Some(Box::new(models::Account {
+                r#type: "account".into(),
+                display_name: Some("Alice".into()),
+                ..Default::default()
+            })),
+            source: Some(Box::new(models::PullrequestEndpoint {
+                branch: Some(Box::new(models::PullRequestBranch {
+                    name: Some("feature/auth".into()),
+                    ..Default::default()
+                })),
+                ..Default::default()
+            })),
+            destination: Some(Box::new(models::PullrequestEndpoint {
+                branch: Some(Box::new(models::PullRequestBranch {
+                    name: Some("main".into()),
+                    ..Default::default()
+                })),
+                ..Default::default()
+            })),
+            draft: Some(false),
+            comment_count: Some(3),
+            task_count: Some(1),
+            created_on: Some("2026-04-15T12:00:00+00:00".into()),
+            updated_on: Some("2026-04-16T12:00:00+00:00".into()),
+            ..Default::default()
+        };
+
+        let row = pull_request_to_row("acme", "api", pull_request).expect("row should exist");
+
+        assert_eq!(row.id, 42);
+        assert_eq!(row.state, "OPEN");
+        assert_eq!(row.author_display_name.as_deref(), Some("Alice"));
+        assert_eq!(row.source_branch.as_deref(), Some("feature/auth"));
+        assert_eq!(row.destination_branch.as_deref(), Some("main"));
+    }
+
+    #[test]
+    fn list_pull_requests_forwards_state_and_follows_pagination() {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("listener should bind");
+        let address = listener.local_addr().expect("listener address");
+        let requests = Arc::new(Mutex::new(Vec::<String>::new()));
+        let requests_for_thread = Arc::clone(&requests);
+
+        let server = thread::spawn(move || {
+            for _ in 0..2 {
+                let (mut stream, _) = listener.accept().expect("request should connect");
+                let mut buf = [0_u8; 4096];
+                let read = stream.read(&mut buf).expect("request should be readable");
+                let request = String::from_utf8_lossy(&buf[..read]).to_string();
+                let path = request
+                    .lines()
+                    .next()
+                    .and_then(|line| line.split_whitespace().nth(1))
+                    .expect("request path")
+                    .to_owned();
+                requests_for_thread
+                    .lock()
+                    .expect("requests lock")
+                    .push(path.clone());
+
+                let body = if path.starts_with("/repositories/acme/api/pullrequests?state=MERGED") {
+                    format!(
+                        "{{\"next\":\"http://{address}/next-page\",\"values\":[{{\"type\":\"pullrequest\",\"id\":1,\"title\":\"First\",\"state\":\"MERGED\"}}]}}"
+                    )
+                } else {
+                    "{\"values\":[{\"type\":\"pullrequest\",\"id\":2,\"title\":\"Second\",\"state\":\"MERGED\"}]}".to_string()
+                };
+
+                write!(
+                    stream,
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                    body.len(),
+                    body
+                )
+                .expect("response should be writable");
+            }
+        });
+
+        let mut config = Configuration::new();
+        config.base_path = format!("http://{address}");
+        config.user_agent = Some("bb-test".into());
+        config.basic_auth = Some(("alice".into(), Some("token".into())));
+
+        let client = BitbucketClient::from_configuration(config);
+        let runtime = Runtime::new().expect("runtime should be created");
+        let pull_requests = runtime
+            .block_on(client.list_pull_requests_in_repository("acme", "api", Some("MERGED")))
+            .expect("request should succeed");
+
+        server.join().expect("server thread should finish");
+
+        assert_eq!(pull_requests.len(), 2);
+        assert_eq!(pull_requests[0].id, 1);
+        assert_eq!(pull_requests[1].id, 2);
+
+        let requests = requests.lock().expect("requests lock");
+        assert_eq!(
+            requests[0],
+            "/repositories/acme/api/pullrequests?state=MERGED"
+        );
+        assert_eq!(requests[1], "/next-page");
     }
 }

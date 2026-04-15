@@ -21,6 +21,23 @@ pub struct RepoRow {
     pub clone_ssh: Option<String>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PullRequestRow {
+    pub workspace_slug: String,
+    pub repo_slug: String,
+    pub id: i32,
+    pub title: Option<String>,
+    pub state: String,
+    pub author_display_name: Option<String>,
+    pub source_branch: Option<String>,
+    pub destination_branch: Option<String>,
+    pub draft: Option<bool>,
+    pub comment_count: Option<i32>,
+    pub task_count: Option<i32>,
+    pub created_on: Option<String>,
+    pub updated_on: Option<String>,
+}
+
 impl RepoRow {
     pub fn display_name(&self) -> String {
         if let Some(full_name) = &self.full_name {
@@ -55,6 +72,23 @@ pub struct RepoJsonRow {
     pub clone_ssh: Option<String>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+pub struct PullRequestJsonRow {
+    pub workspace_slug: String,
+    pub repo_slug: String,
+    pub id: i32,
+    pub title: Option<String>,
+    pub state: String,
+    pub author_display_name: Option<String>,
+    pub source_branch: Option<String>,
+    pub destination_branch: Option<String>,
+    pub draft: Option<bool>,
+    pub comment_count: Option<i32>,
+    pub task_count: Option<i32>,
+    pub created_on: Option<String>,
+    pub updated_on: Option<String>,
+}
+
 impl From<&RepoRow> for RepoJsonRow {
     fn from(value: &RepoRow) -> Self {
         Self {
@@ -68,6 +102,26 @@ impl From<&RepoRow> for RepoJsonRow {
             updated_on: value.updated_on.clone(),
             clone_https: value.clone_https.clone(),
             clone_ssh: value.clone_ssh.clone(),
+        }
+    }
+}
+
+impl From<&PullRequestRow> for PullRequestJsonRow {
+    fn from(value: &PullRequestRow) -> Self {
+        Self {
+            workspace_slug: value.workspace_slug.clone(),
+            repo_slug: value.repo_slug.clone(),
+            id: value.id,
+            title: value.title.clone(),
+            state: value.state.clone(),
+            author_display_name: value.author_display_name.clone(),
+            source_branch: value.source_branch.clone(),
+            destination_branch: value.destination_branch.clone(),
+            draft: value.draft,
+            comment_count: value.comment_count,
+            task_count: value.task_count,
+            created_on: value.created_on.clone(),
+            updated_on: value.updated_on.clone(),
         }
     }
 }
@@ -86,7 +140,7 @@ pub fn normalize_repositories(mut repos: Vec<RepoRow>) -> Vec<RepoRow> {
 
 #[cfg(test)]
 mod tests {
-    use super::{RepoRow, normalize_repositories};
+    use super::{PullRequestJsonRow, PullRequestRow, RepoRow, normalize_repositories};
 
     fn repo(workspace: &str, slug: &str, full_name: Option<&str>) -> RepoRow {
         RepoRow {
@@ -144,5 +198,32 @@ mod tests {
         assert_eq!(normalized[0].repo_slug, "app");
         assert_eq!(normalized[1].workspace_slug, "beta");
         assert_eq!(normalized[1].repo_slug, "service");
+    }
+
+    #[test]
+    fn pull_request_json_row_preserves_selected_fields() {
+        let row = PullRequestRow {
+            workspace_slug: "acme".into(),
+            repo_slug: "api".into(),
+            id: 42,
+            title: Some("Improve auth".into()),
+            state: "OPEN".into(),
+            author_display_name: Some("Alice".into()),
+            source_branch: Some("feature/auth".into()),
+            destination_branch: Some("main".into()),
+            draft: Some(false),
+            comment_count: Some(3),
+            task_count: Some(1),
+            created_on: Some("2026-04-15T12:00:00+00:00".into()),
+            updated_on: Some("2026-04-16T12:00:00+00:00".into()),
+        };
+
+        let json_row = PullRequestJsonRow::from(&row);
+
+        assert_eq!(json_row.id, 42);
+        assert_eq!(json_row.state, "OPEN");
+        assert_eq!(json_row.author_display_name.as_deref(), Some("Alice"));
+        assert_eq!(json_row.source_branch.as_deref(), Some("feature/auth"));
+        assert_eq!(json_row.destination_branch.as_deref(), Some("main"));
     }
 }

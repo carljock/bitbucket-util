@@ -40,6 +40,11 @@ async fn run() -> Result<(), BbcliError> {
         Command::ReposList { workspace, role } => {
             run_repos_list(parsed.json, workspace, role).await
         }
+        Command::PullRequestsList {
+            workspace_slug,
+            repo_slug,
+            state,
+        } => run_pull_requests_list(parsed.json, workspace_slug, repo_slug, state).await,
     }
 }
 
@@ -60,6 +65,32 @@ async fn run_repos_list(
             .map_err(|source| BbcliError::with_io("writing CLI output", source))
     } else {
         output::write_repositories(std::io::stdout(), repositories.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pull_requests_list(
+    json: bool,
+    workspace_slug: String,
+    repo_slug: String,
+    state: Option<cli::PullRequestState>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+
+    let pull_requests = client
+        .list_pull_requests_in_repository(
+            workspace_slug.as_str(),
+            repo_slug.as_str(),
+            state.map(|value| value.as_api_value()),
+        )
+        .await?;
+
+    if json {
+        output::write_pull_requests_json(std::io::stdout(), pull_requests.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pull_requests(std::io::stdout(), pull_requests.as_slice())
             .map_err(|source| BbcliError::with_io("writing CLI output", source))
     }
 }
