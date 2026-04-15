@@ -146,7 +146,7 @@ mod tests {
 
     fn write_tmp_netrc(contents: &str, suffix: &str) -> PathBuf {
         let path =
-            std::env::temp_dir().join(format!("bbcli-netrc-{suffix}-{}.txt", std::process::id()));
+            std::env::temp_dir().join(format!("bb-netrc-{suffix}-{}.txt", std::process::id()));
         fs::write(&path, contents).expect("netrc write should succeed");
         path
     }

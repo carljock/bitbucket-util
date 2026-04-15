@@ -12,7 +12,7 @@ pub struct BitbucketClient {
 impl BitbucketClient {
     pub fn from_credentials(login: String, token: String) -> Self {
         let mut config = Configuration::new();
-        config.user_agent = Some(format!("bbcli/{}", env!("CARGO_PKG_VERSION")));
+        config.user_agent = Some(format!("bb/{}", env!("CARGO_PKG_VERSION")));
         config.basic_auth = Some((login, Some(token)));
 
         Self { config }

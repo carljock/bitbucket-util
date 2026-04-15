@@ -1,5 +1,5 @@
 const USAGE: &str =
-    "Usage:\n  bbcli repos list [--workspace <slug>] [--role <member|contributor|admin|owner>]";
+    "Usage:\n  bb repos list [--workspace <slug>] [--role <member|contributor|admin|owner>]";
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum RepoRole {
