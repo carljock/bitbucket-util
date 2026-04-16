@@ -2,7 +2,7 @@ const USAGE: &str = concat!(
     "Usage:\n",
     "  bb [--json] repo list [--workspace <slug>] ",
     "[--role <member|contributor|admin|owner>]\n",
-    "  bb [--json] pr list --repo <workspace>/<repo> ",
+    "  bb [--json] pr list [--repo <workspace>/<repo>] ",
     "[--state <open|merged|declined|superseded>]"
 );
 
@@ -75,8 +75,7 @@ pub enum Command {
         role: Option<RepoRole>,
     },
     PullRequestsList {
-        workspace_slug: String,
-        repo_slug: String,
+        repo: Option<(String, String)>,
         state: Option<PullRequestState>,
     },
 }
@@ -174,15 +173,7 @@ fn parse_pr_list(args: &[String]) -> Result<Command, String> {
         }
     }
 
-    let Some((workspace_slug, repo_slug)) = repo else {
-        return Err(format!("missing required option --repo\n\n{USAGE}"));
-    };
-
-    Ok(Command::PullRequestsList {
-        workspace_slug,
-        repo_slug,
-        state,
-    })
+    Ok(Command::PullRequestsList { repo, state })
 }
 
 fn parse_repo_slug(value: &str) -> Result<(String, String), String> {
@@ -298,8 +289,7 @@ mod tests {
             ParsedArgs {
                 json: false,
                 command: Command::PullRequestsList {
-                    workspace_slug: "acme".into(),
-                    repo_slug: "api".into(),
+                    repo: Some(("acme".into(), "api".into())),
                     state: None,
                 }
             }
@@ -323,8 +313,7 @@ mod tests {
             ParsedArgs {
                 json: false,
                 command: Command::PullRequestsList {
-                    workspace_slug: "acme".into(),
-                    repo_slug: "api".into(),
+                    repo: Some(("acme".into(), "api".into())),
                     state: Some(PullRequestState::Merged),
                 }
             }
@@ -347,8 +336,7 @@ mod tests {
             ParsedArgs {
                 json: true,
                 command: Command::PullRequestsList {
-                    workspace_slug: "acme".into(),
-                    repo_slug: "api".into(),
+                    repo: Some(("acme".into(), "api".into())),
                     state: None,
                 }
             }
@@ -356,9 +344,41 @@ mod tests {
     }
 
     #[test]
-    fn rejects_pr_list_without_repo() {
-        let err = parse_args(vec!["pr".into(), "list".into()]).expect_err("parse should fail");
-        assert!(err.contains("missing required option --repo"));
+    fn parses_pr_list_without_repo() {
+        let cmd = parse_args(vec!["pr".into(), "list".into()]).expect("parse should work");
+
+        assert_eq!(
+            cmd,
+            ParsedArgs {
+                json: false,
+                command: Command::PullRequestsList {
+                    repo: None,
+                    state: None,
+                }
+            }
+        );
+    }
+
+    #[test]
+    fn parses_pr_list_without_repo_with_state() {
+        let cmd = parse_args(vec![
+            "pr".into(),
+            "list".into(),
+            "--state".into(),
+            "merged".into(),
+        ])
+        .expect("parse should work");
+
+        assert_eq!(
+            cmd,
+            ParsedArgs {
+                json: false,
+                command: Command::PullRequestsList {
+                    repo: None,
+                    state: Some(PullRequestState::Merged),
+                }
+            }
+        );
     }
 
     #[test]

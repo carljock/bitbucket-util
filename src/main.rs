@@ -2,6 +2,7 @@ mod auth;
 mod cli;
 mod client;
 mod error;
+mod git;
 mod model;
 mod output;
 
@@ -40,11 +41,9 @@ async fn run() -> Result<(), BbcliError> {
         Command::ReposList { workspace, role } => {
             run_repos_list(parsed.json, workspace, role).await
         }
-        Command::PullRequestsList {
-            workspace_slug,
-            repo_slug,
-            state,
-        } => run_pull_requests_list(parsed.json, workspace_slug, repo_slug, state).await,
+        Command::PullRequestsList { repo, state } => {
+            run_pull_requests_list(parsed.json, repo, state).await
+        }
     }
 }
 
@@ -71,12 +70,12 @@ async fn run_repos_list(
 
 async fn run_pull_requests_list(
     json: bool,
-    workspace_slug: String,
-    repo_slug: String,
+    repo: Option<(String, String)>,
     state: Option<cli::PullRequestState>,
 ) -> Result<(), BbcliError> {
     let credentials = load_credentials(BITBUCKET_MACHINE)?;
     let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
 
     let pull_requests = client
         .list_pull_requests_in_repository(
@@ -92,5 +91,24 @@ async fn run_pull_requests_list(
     } else {
         output::write_pull_requests(std::io::stdout(), pull_requests.as_slice())
             .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+fn resolve_pr_repo_slug(repo: Option<(String, String)>) -> Result<(String, String), BbcliError> {
+    match repo {
+        Some(repo) => Ok(repo),
+        None => git::detect_bitbucket_repo_slug_from_cwd(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_pr_repo_slug;
+
+    #[test]
+    fn explicit_repo_bypasses_git_detection() {
+        let repo = resolve_pr_repo_slug(Some(("acme".into(), "api".into())))
+            .expect("explicit repo should succeed");
+        assert_eq!(repo, ("acme".into(), "api".into()));
     }
 }
