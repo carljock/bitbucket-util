@@ -9,7 +9,7 @@ mod output;
 use std::process;
 
 use auth::load_credentials;
-use cli::{Command, parse_args};
+use clap::Parser;
 use client::BitbucketClient;
 use error::BbcliError;
 
@@ -34,16 +34,19 @@ async fn main() {
 }
 
 async fn run() -> Result<(), BbcliError> {
-    let parsed = parse_args(std::env::args().skip(1).collect::<Vec<_>>())
-        .map_err(|message| BbcliError::Cli { message })?;
+    let parsed = cli::ParsedArgs::parse();
 
     match parsed.command {
-        Command::ReposList { workspace, role } => {
-            run_repos_list(parsed.json, workspace, role).await
-        }
-        Command::PullRequestsList { repo, state } => {
-            run_pull_requests_list(parsed.json, repo, state).await
-        }
+        cli::Command::Repo(repo_args) => match repo_args.command {
+            cli::RepoSubcommand::List { workspace, role } => {
+                run_repos_list(parsed.json, workspace, role).await
+            }
+        },
+        cli::Command::Pr(pr_args) => match pr_args.command {
+            cli::PrSubcommand::List { repo, state } => {
+                run_pull_requests_list(parsed.json, repo, state).await
+            }
+        },
     }
 }
 

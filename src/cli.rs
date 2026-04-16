@@ -1,12 +1,7 @@
-const USAGE: &str = concat!(
-    "Usage:\n",
-    "  bb [--json] repo list [--workspace <slug>] ",
-    "[--role <member|contributor|admin|owner>]\n",
-    "  bb [--json] pr list [--repo <workspace>/<repo>] ",
-    "[--state <open|merged|declined|superseded>]"
-);
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum)]
+#[clap(rename_all = "lower")]
 pub enum RepoRole {
     Member,
     Contributor,
@@ -23,21 +18,10 @@ impl RepoRole {
             RepoRole::Owner => "owner",
         }
     }
-
-    fn parse(value: &str) -> Result<Self, String> {
-        match value {
-            "member" => Ok(Self::Member),
-            "contributor" => Ok(Self::Contributor),
-            "admin" => Ok(Self::Admin),
-            "owner" => Ok(Self::Owner),
-            _ => Err(format!(
-                "invalid value for --role `{value}`. Expected one of: member, contributor, admin, owner"
-            )),
-        }
-    }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum)]
+#[clap(rename_all = "lower")]
 pub enum PullRequestState {
     Open,
     Merged,
@@ -54,126 +38,65 @@ impl PullRequestState {
             PullRequestState::Superseded => "SUPERSEDED",
         }
     }
-
-    fn parse(value: &str) -> Result<Self, String> {
-        match value {
-            "open" => Ok(Self::Open),
-            "merged" => Ok(Self::Merged),
-            "declined" => Ok(Self::Declined),
-            "superseded" => Ok(Self::Superseded),
-            _ => Err(format!(
-                "invalid value for --state `{value}`. Expected one of: open, merged, declined, superseded"
-            )),
-        }
-    }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Command {
-    ReposList {
-        workspace: Option<String>,
-        role: Option<RepoRole>,
-    },
-    PullRequestsList {
-        repo: Option<(String, String)>,
-        state: Option<PullRequestState>,
-    },
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Parser, Clone, Eq, PartialEq)]
+#[command(name = "bb")]
+#[command(version)]
+#[command(about = "Bitbucket CLI", long_about = None)]
 pub struct ParsedArgs {
+    /// Output in JSON format
+    #[arg(long, global = true)]
     pub json: bool,
+
+    #[command(subcommand)]
     pub command: Command,
 }
 
-pub fn parse_args(args: impl IntoIterator<Item = String>) -> Result<ParsedArgs, String> {
-    let args: Vec<String> = args.into_iter().collect();
-
-    if args.is_empty() {
-        return Err(format!("missing command\n\n{USAGE}"));
-    }
-
-    let mut json = false;
-    let mut positionals = Vec::new();
-
-    for arg in args {
-        match arg.as_str() {
-            "--json" => json = true,
-            _ => positionals.push(arg),
-        }
-    }
-
-    if positionals.len() < 2 {
-        return Err(format!("missing command\n\n{USAGE}"));
-    }
-
-    let command = match (positionals[0].as_str(), positionals[1].as_str()) {
-        ("repo", "list") => parse_repo_list(&positionals[2..])?,
-        ("pr", "list") => parse_pr_list(&positionals[2..])?,
-        _ => return Err(format!("unsupported command\n\n{USAGE}")),
-    };
-
-    Ok(ParsedArgs { json, command })
+#[derive(Debug, Subcommand, Clone, Eq, PartialEq)]
+pub enum Command {
+    /// Manage repositories
+    Repo(RepoArgs),
+    /// Manage pull requests
+    Pr(PrArgs),
 }
 
-fn parse_repo_list(args: &[String]) -> Result<Command, String> {
-    let mut workspace = None;
-    let mut role = None;
-    let mut i = 0;
-
-    while i < args.len() {
-        match args[i].as_str() {
-            "--workspace" => {
-                let Some(value) = args.get(i + 1) else {
-                    return Err(format!("missing value for --workspace\n\n{USAGE}"));
-                };
-
-                workspace = Some(value.clone());
-                i += 2;
-            }
-            "--role" => {
-                let Some(value) = args.get(i + 1) else {
-                    return Err(format!("missing value for --role\n\n{USAGE}"));
-                };
-
-                role = Some(RepoRole::parse(value)?);
-                i += 2;
-            }
-            flag => return Err(format!("unknown option `{flag}`\n\n{USAGE}")),
-        }
-    }
-
-    Ok(Command::ReposList { workspace, role })
+#[derive(Debug, Args, Clone, Eq, PartialEq)]
+pub struct RepoArgs {
+    #[command(subcommand)]
+    pub command: RepoSubcommand,
 }
 
-fn parse_pr_list(args: &[String]) -> Result<Command, String> {
-    let mut repo = None;
-    let mut state = None;
-    let mut i = 0;
+#[derive(Debug, Subcommand, Clone, Eq, PartialEq)]
+pub enum RepoSubcommand {
+    /// List repositories
+    List {
+        /// Filter by workspace slug
+        #[arg(long)]
+        workspace: Option<String>,
+        /// Filter by role
+        #[arg(long)]
+        role: Option<RepoRole>,
+    },
+}
 
-    while i < args.len() {
-        match args[i].as_str() {
-            "--repo" => {
-                let Some(value) = args.get(i + 1) else {
-                    return Err(format!("missing value for --repo\n\n{USAGE}"));
-                };
+#[derive(Debug, Args, Clone, Eq, PartialEq)]
+pub struct PrArgs {
+    #[command(subcommand)]
+    pub command: PrSubcommand,
+}
 
-                repo = Some(parse_repo_slug(value)?);
-                i += 2;
-            }
-            "--state" => {
-                let Some(value) = args.get(i + 1) else {
-                    return Err(format!("missing value for --state\n\n{USAGE}"));
-                };
-
-                state = Some(PullRequestState::parse(value)?);
-                i += 2;
-            }
-            flag => return Err(format!("unknown option `{flag}`\n\n{USAGE}")),
-        }
-    }
-
-    Ok(Command::PullRequestsList { repo, state })
+#[derive(Debug, Subcommand, Clone, Eq, PartialEq)]
+pub enum PrSubcommand {
+    /// List pull requests
+    List {
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+        /// Filter by state
+        #[arg(long)]
+        state: Option<PullRequestState>,
+    },
 }
 
 fn parse_repo_slug(value: &str) -> Result<(String, String), String> {
@@ -198,7 +121,15 @@ fn parse_repo_slug(value: &str) -> Result<(String, String), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Command, ParsedArgs, PullRequestState, RepoRole, parse_args};
+    use clap::Parser;
+
+    use super::{Command, ParsedArgs, PrArgs, PrSubcommand, PullRequestState, RepoArgs, RepoRole, RepoSubcommand};
+
+    fn parse_args(args: Vec<String>) -> Result<ParsedArgs, clap::Error> {
+        let mut full_args = vec!["bb".to_string()];
+        full_args.extend(args);
+        ParsedArgs::try_parse_from(full_args)
+    }
 
     #[test]
     fn parses_minimal_repo_list() {
@@ -208,10 +139,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: false,
-                command: Command::ReposList {
-                    workspace: None,
-                    role: None
-                }
+                command: Command::Repo(RepoArgs {
+                    command: RepoSubcommand::List {
+                        workspace: None,
+                        role: None
+                    }
+                })
             }
         );
     }
@@ -232,10 +165,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: false,
-                command: Command::ReposList {
-                    workspace: Some("acme".into()),
-                    role: Some(RepoRole::Contributor)
-                }
+                command: Command::Repo(RepoArgs {
+                    command: RepoSubcommand::List {
+                        workspace: Some("acme".into()),
+                        role: Some(RepoRole::Contributor)
+                    }
+                })
             }
         );
     }
@@ -249,10 +184,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: true,
-                command: Command::ReposList {
-                    workspace: None,
-                    role: None
-                }
+                command: Command::Repo(RepoArgs {
+                    command: RepoSubcommand::List {
+                        workspace: None,
+                        role: None
+                    }
+                })
             }
         );
     }
@@ -266,10 +203,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: true,
-                command: Command::ReposList {
-                    workspace: None,
-                    role: None
-                }
+                command: Command::Repo(RepoArgs {
+                    command: RepoSubcommand::List {
+                        workspace: None,
+                        role: None
+                    }
+                })
             }
         );
     }
@@ -288,10 +227,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: false,
-                command: Command::PullRequestsList {
-                    repo: Some(("acme".into(), "api".into())),
-                    state: None,
-                }
+                command: Command::Pr(PrArgs {
+                    command: PrSubcommand::List {
+                        repo: Some(("acme".into(), "api".into())),
+                        state: None,
+                    }
+                })
             }
         );
     }
@@ -312,10 +253,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: false,
-                command: Command::PullRequestsList {
-                    repo: Some(("acme".into(), "api".into())),
-                    state: Some(PullRequestState::Merged),
-                }
+                command: Command::Pr(PrArgs {
+                    command: PrSubcommand::List {
+                        repo: Some(("acme".into(), "api".into())),
+                        state: Some(PullRequestState::Merged),
+                    }
+                })
             }
         );
     }
@@ -335,10 +278,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: true,
-                command: Command::PullRequestsList {
-                    repo: Some(("acme".into(), "api".into())),
-                    state: None,
-                }
+                command: Command::Pr(PrArgs {
+                    command: PrSubcommand::List {
+                        repo: Some(("acme".into(), "api".into())),
+                        state: None,
+                    }
+                })
             }
         );
     }
@@ -351,10 +296,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: false,
-                command: Command::PullRequestsList {
-                    repo: None,
-                    state: None,
-                }
+                command: Command::Pr(PrArgs {
+                    command: PrSubcommand::List {
+                        repo: None,
+                        state: None,
+                    }
+                })
             }
         );
     }
@@ -373,10 +320,12 @@ mod tests {
             cmd,
             ParsedArgs {
                 json: false,
-                command: Command::PullRequestsList {
-                    repo: None,
-                    state: Some(PullRequestState::Merged),
-                }
+                command: Command::Pr(PrArgs {
+                    command: PrSubcommand::List {
+                        repo: None,
+                        state: Some(PullRequestState::Merged),
+                    }
+                })
             }
         );
     }
@@ -391,7 +340,7 @@ mod tests {
         ])
         .expect_err("parse should fail");
 
-        assert!(err.contains("invalid value for --repo `acme`"));
+        assert!(err.to_string().contains("invalid value for --repo `acme`"));
     }
 
     #[test]
@@ -406,6 +355,6 @@ mod tests {
         ])
         .expect_err("parse should fail");
 
-        assert!(err.contains("invalid value for --state `draft`"));
+        assert!(err.to_string().contains("invalid value 'draft' for '--state"));
     }
 }

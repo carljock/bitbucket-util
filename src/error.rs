@@ -58,9 +58,6 @@ pub enum BbcliError {
         remote: String,
         url: String,
     },
-    Cli {
-        message: String,
-    },
 }
 
 impl fmt::Display for BbcliError {
@@ -133,7 +130,6 @@ impl fmt::Display for BbcliError {
                 f,
                 "malformed Bitbucket remote `{remote}` with URL `{url}`; pass --repo <workspace>/<repo>"
             ),
-            BbcliError::Cli { message } => write!(f, "{message}"),
         }
     }
 }
