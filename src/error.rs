@@ -4,6 +4,9 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub enum BbcliError {
+    Usage {
+        message: String,
+    },
     HomeDirUnavailable,
     CurrentDirRead {
         source: std::io::Error,
@@ -58,11 +61,16 @@ pub enum BbcliError {
         remote: String,
         url: String,
     },
+    Mcp {
+        context: &'static str,
+        message: String,
+    },
 }
 
 impl fmt::Display for BbcliError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            BbcliError::Usage { message } => write!(f, "{message}"),
             BbcliError::HomeDirUnavailable => {
                 write!(f, "unable to determine home directory for .netrc lookup")
             }
@@ -130,6 +138,9 @@ impl fmt::Display for BbcliError {
                 f,
                 "malformed Bitbucket remote `{remote}` with URL `{url}`; pass --repo <workspace>/<repo>"
             ),
+            BbcliError::Mcp { context, message } => {
+                write!(f, "MCP error during {context}: {message}")
+            }
         }
     }
 }

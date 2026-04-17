@@ -9,7 +9,7 @@ pub fn detect_bitbucket_repo_slug_from_cwd() -> Result<(String, String), BbcliEr
     detect_bitbucket_repo_slug_from_path(cwd.as_path())
 }
 
-fn detect_bitbucket_repo_slug_from_path(start: &Path) -> Result<(String, String), BbcliError> {
+pub fn detect_bitbucket_repo_slug_from_path(start: &Path) -> Result<(String, String), BbcliError> {
     let git_dir = find_git_dir(start)?;
     let config_path = git_dir.join("config");
     let config = fs::read_to_string(&config_path).map_err(|source| BbcliError::GitConfigRead {
@@ -52,6 +52,10 @@ fn find_git_dir(start: &Path) -> Result<PathBuf, BbcliError> {
             return Ok(git_path);
         }
 
+        if git_path.is_file() {
+            return resolve_git_file(git_path.as_path());
+        }
+
         if git_path.exists() {
             return Err(BbcliError::GitWorktreeUnsupported { path: git_path });
         }
@@ -60,6 +64,39 @@ fn find_git_dir(start: &Path) -> Result<PathBuf, BbcliError> {
     }
 
     Err(BbcliError::GitRepoNotFound)
+}
+
+fn resolve_git_file(git_path: &Path) -> Result<PathBuf, BbcliError> {
+    let content = fs::read_to_string(git_path).map_err(|source| BbcliError::GitConfigRead {
+        path: git_path.to_path_buf(),
+        source,
+    })?;
+
+    let Some(raw_gitdir) = content
+        .lines()
+        .next()
+        .and_then(|line| line.trim().strip_prefix("gitdir:"))
+        .map(str::trim)
+    else {
+        return Err(BbcliError::GitWorktreeUnsupported {
+            path: git_path.to_path_buf(),
+        });
+    };
+
+    if raw_gitdir.is_empty() {
+        return Err(BbcliError::GitWorktreeUnsupported {
+            path: git_path.to_path_buf(),
+        });
+    }
+
+    Ok(if Path::new(raw_gitdir).is_absolute() {
+        PathBuf::from(raw_gitdir)
+    } else {
+        git_path
+            .parent()
+            .unwrap_or_else(|| Path::new("/"))
+            .join(raw_gitdir)
+    })
 }
 
 fn parse_git_config_remotes(config: &str) -> Vec<(String, String)> {
@@ -221,8 +258,18 @@ mod tests {
             unique_id()
         ));
         fs::create_dir_all(&root).expect("root should be created");
-        fs::write(root.join(".git"), "gitdir: /tmp/not-supported\n")
-            .expect("git file should be written");
+        let git_dir = root.join(".git-worktree");
+        fs::create_dir_all(&git_dir).expect("git dir should be created");
+        fs::write(
+            root.join(".git"),
+            format!("gitdir: {}\n", git_dir.display()),
+        )
+        .expect("git file should be written");
+        fs::write(
+            git_dir.join("config"),
+            "[remote \"origin\"]\n    url = git@bitbucket.org:acme/worktree.git\n",
+        )
+        .expect("config should be written");
         root
     }
 
@@ -276,7 +323,9 @@ mod tests {
             Some(Ok(("acme".into(), "api".into())))
         );
         assert_eq!(
-            parse_bitbucket_slug_from_remote_url("https://x-token-auth:token@bitbucket.org/acme/api.git"),
+            parse_bitbucket_slug_from_remote_url(
+                "https://x-token-auth:token@bitbucket.org/acme/api.git"
+            ),
             Some(Ok(("acme".into(), "api".into())))
         );
     }
@@ -329,10 +378,10 @@ mod tests {
     }
 
     #[test]
-    fn fails_when_git_is_a_file() {
+    fn resolves_git_worktree_file() {
         let root = write_worktree_like_repo("file");
-        let err = detect_bitbucket_repo_slug_from_path(&root).expect_err("should fail");
-        assert!(err.to_string().contains("worktrees are not supported"));
+        let slug = detect_bitbucket_repo_slug_from_path(&root).expect("should resolve");
+        assert_eq!(slug, ("acme".into(), "worktree".into()));
     }
 
     #[test]

@@ -3,6 +3,7 @@ mod cli;
 mod client;
 mod error;
 mod git;
+mod mcp;
 mod model;
 mod output;
 
@@ -47,7 +48,18 @@ async fn run() -> Result<(), BbcliError> {
                 run_pull_requests_list(parsed.json, repo, state).await
             }
         },
+        cli::Command::Mcp => run_mcp(parsed.json).await,
     }
+}
+
+async fn run_mcp(json: bool) -> Result<(), BbcliError> {
+    if json {
+        return Err(BbcliError::Usage {
+            message: "`--json` is not supported with `bb mcp`".to_owned(),
+        });
+    }
+
+    mcp::run_server().await
 }
 
 async fn run_repos_list(
@@ -106,12 +118,18 @@ fn resolve_pr_repo_slug(repo: Option<(String, String)>) -> Result<(String, Strin
 
 #[cfg(test)]
 mod tests {
-    use super::resolve_pr_repo_slug;
+    use super::{resolve_pr_repo_slug, run_mcp};
 
     #[test]
     fn explicit_repo_bypasses_git_detection() {
         let repo = resolve_pr_repo_slug(Some(("acme".into(), "api".into())))
             .expect("explicit repo should succeed");
         assert_eq!(repo, ("acme".into(), "api".into()));
+    }
+
+    #[tokio::test]
+    async fn mcp_rejects_json_output_flag() {
+        let err = run_mcp(true).await.expect_err("json should be rejected");
+        assert_eq!(err.to_string(), "`--json` is not supported with `bb mcp`");
     }
 }

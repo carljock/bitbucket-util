@@ -1,7 +1,10 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum, Serialize, Deserialize, JsonSchema)]
 #[clap(rename_all = "lower")]
+#[serde(rename_all = "lowercase")]
 pub enum RepoRole {
     Member,
     Contributor,
@@ -20,8 +23,9 @@ impl RepoRole {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum, Serialize, Deserialize, JsonSchema)]
 #[clap(rename_all = "lower")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PullRequestState {
     Open,
     Merged,
@@ -59,6 +63,8 @@ pub enum Command {
     Repo(RepoArgs),
     /// Manage pull requests
     Pr(PrArgs),
+    /// Start an MCP server over stdio
+    Mcp,
 }
 
 #[derive(Debug, Args, Clone, Eq, PartialEq)]
@@ -123,7 +129,10 @@ fn parse_repo_slug(value: &str) -> Result<(String, String), String> {
 mod tests {
     use clap::Parser;
 
-    use super::{Command, ParsedArgs, PrArgs, PrSubcommand, PullRequestState, RepoArgs, RepoRole, RepoSubcommand};
+    use super::{
+        Command, ParsedArgs, PrArgs, PrSubcommand, PullRequestState, RepoArgs, RepoRole,
+        RepoSubcommand,
+    };
 
     fn parse_args(args: Vec<String>) -> Result<ParsedArgs, clap::Error> {
         let mut full_args = vec!["bb".to_string()];
@@ -355,6 +364,22 @@ mod tests {
         ])
         .expect_err("parse should fail");
 
-        assert!(err.to_string().contains("invalid value 'draft' for '--state"));
+        assert!(
+            err.to_string()
+                .contains("invalid value 'draft' for '--state")
+        );
+    }
+
+    #[test]
+    fn parses_mcp_command() {
+        let cmd = parse_args(vec!["mcp".into()]).expect("parse should work");
+
+        assert_eq!(
+            cmd,
+            ParsedArgs {
+                json: false,
+                command: Command::Mcp,
+            }
+        );
     }
 }

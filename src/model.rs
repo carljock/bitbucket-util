@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -59,7 +60,7 @@ impl RepoRow {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, JsonSchema)]
 pub struct RepoJsonRow {
     pub full_name: Option<String>,
     pub workspace_slug: String,
@@ -73,7 +74,7 @@ pub struct RepoJsonRow {
     pub clone_ssh: Option<String>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, JsonSchema)]
 pub struct PullRequestJsonRow {
     pub workspace_slug: String,
     pub repo_slug: String,
