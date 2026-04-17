@@ -111,7 +111,7 @@ impl BitbucketClient {
         workspace_slug: &str,
         repo_slug: &str,
         state: Option<&str>,
-    ) -> Result<Vec<PullRequestRow>, BbcliError> {
+    ) -> Result<Vec<crate::model::PullRequestRow>, BbcliError> {
         let mut page = apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_get(
             &self.config,
             repo_slug,
@@ -144,6 +144,267 @@ impl BitbucketClient {
         Ok(pull_requests)
     }
 
+    pub async fn get_pull_request(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+    ) -> Result<crate::model::PullRequestDetailedRow, BbcliError> {
+        let pr = apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_pull_request_id_get(
+            &self.config,
+            id,
+            repo_slug,
+            workspace_slug,
+        )
+        .await
+        .map_err(|err| map_sdk_error("get pull request", err))?;
+
+        Ok(pull_request_to_detailed_row(workspace_slug, repo_slug, pr))
+    }
+
+    pub async fn get_pull_request_diff(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+    ) -> Result<String, BbcliError> {
+        let mut request = self.config.client.get(format!(
+            "{}/repositories/{workspace_slug}/{repo_slug}/pullrequests/{id}/diff",
+            self.config.base_path
+        ));
+
+        if let Some(user_agent) = &self.config.user_agent {
+            request = request.header("User-Agent", user_agent.clone());
+        }
+
+        if let Some((username, password)) = &self.config.basic_auth {
+            request = request.basic_auth(username, password.clone());
+        }
+
+        let response = request.send().await.map_err(|err| BbcliError::Network {
+            context: "get pull request diff",
+            message: err.to_string(),
+        })?;
+
+        let status = response.status();
+        let body = response.text().await.map_err(|err| BbcliError::Network {
+            context: "get pull request diff",
+            message: err.to_string(),
+        })?;
+
+        if !status.is_success() {
+            return Err(BbcliError::Api {
+                context: "get pull request diff",
+                status: Some(status.as_u16()),
+                message: compact_api_message(body.as_str()),
+            });
+        }
+
+        Ok(body)
+    }
+
+    pub async fn list_pull_request_comments(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+    ) -> Result<Vec<crate::model::PullRequestCommentRow>, BbcliError> {
+        let mut page = apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_pull_request_id_comments_get(
+            &self.config,
+            id,
+            repo_slug,
+            workspace_slug,
+        )
+        .await
+        .map_err(|err| map_sdk_error("list pull request comments", err))?;
+
+        let mut comments = pull_request_comment_rows_from_values(page.values.take().unwrap_or_default());
+        let mut next = page.next.take();
+
+        while let Some(next_url) = next {
+            let mut next_page: models::PaginatedPullrequestComments = self
+                .fetch_page(next_url.as_str(), "list pull request comments pagination")
+                .await?;
+
+            comments.extend(pull_request_comment_rows_from_values(
+                next_page.values.take().unwrap_or_default(),
+            ));
+            next = next_page.next.take();
+        }
+
+        Ok(comments)
+    }
+
+    pub async fn create_pull_request_comment(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+        content: &str,
+        inline: Option<crate::model::PullRequestInlineComment>,
+    ) -> Result<crate::model::PullRequestCommentRow, BbcliError> {
+        let mut comment = models::PullrequestComment::new("pullrequest_comment".to_owned());
+        comment.content = Some(Box::new(models::CommentContent {
+            raw: Some(content.to_owned()),
+            ..Default::default()
+        }));
+
+        if let Some(inline_params) = inline {
+            comment.inline = Some(Box::new(models::CommentInline {
+                path: inline_params.path,
+                from: inline_params.from,
+                to: inline_params.to,
+                ..Default::default()
+            }));
+        }
+
+        let created = apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_pull_request_id_comments_post(
+            &self.config,
+            id,
+            repo_slug,
+            workspace_slug,
+            comment,
+        )
+        .await
+        .map_err(|err| map_sdk_error("create pull request comment", err))?;
+
+        Ok(pull_request_comment_to_row(created))
+    }
+
+    pub async fn approve_pull_request(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+    ) -> Result<(), BbcliError> {
+        apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_pull_request_id_approve_post(
+            &self.config,
+            id,
+            repo_slug,
+            workspace_slug,
+        )
+        .await
+        .map_err(|err| map_sdk_error("approve pull request", err))?;
+
+        Ok(())
+    }
+
+    pub async fn unapprove_pull_request(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+    ) -> Result<(), BbcliError> {
+        apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_pull_request_id_approve_delete(
+            &self.config,
+            id,
+            repo_slug,
+            workspace_slug,
+        )
+        .await
+        .map_err(|err| map_sdk_error("unapprove pull request", err))?;
+
+        Ok(())
+    }
+
+    pub async fn decline_pull_request(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+    ) -> Result<(), BbcliError> {
+        apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_pull_request_id_decline_post(
+            &self.config,
+            id,
+            repo_slug,
+            workspace_slug,
+        )
+        .await
+        .map_err(|err| map_sdk_error("decline pull request", err))?;
+
+        Ok(())
+    }
+
+    pub async fn merge_pull_request(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        id: i32,
+        message: Option<String>,
+        close_source_branch: Option<bool>,
+        merge_strategy: Option<&str>,
+    ) -> Result<(), BbcliError> {
+        let mut params = models::PullrequestMergeParameters::new("pullrequest_merge_parameters".to_owned());
+        params.message = message;
+        params.close_source_branch = close_source_branch;
+        params.merge_strategy = merge_strategy.and_then(|s| match s {
+            "merge_commit" => Some(models::pullrequest_merge_parameters::MergeStrategy::MergeCommit),
+            "squash" => Some(models::pullrequest_merge_parameters::MergeStrategy::Squash),
+            "fast_forward" => Some(models::pullrequest_merge_parameters::MergeStrategy::FastForward),
+            "squash_fast_forward" => Some(models::pullrequest_merge_parameters::MergeStrategy::SquashFastForward),
+            "rebase_fast_forward" => Some(models::pullrequest_merge_parameters::MergeStrategy::RebaseFastForward),
+            "rebase_merge" => Some(models::pullrequest_merge_parameters::MergeStrategy::RebaseMerge),
+            _ => None,
+        });
+
+        apis::pullrequests_api::repositories_workspace_repo_slug_pullrequests_pull_request_id_merge_post(
+            &self.config,
+            id,
+            repo_slug,
+            workspace_slug,
+            None,
+            Some(params),
+        )
+        .await
+        .map_err(|err| map_sdk_error("merge pull request", err))?;
+
+        Ok(())
+    }
+}
+
+fn pull_request_comment_rows_from_values(
+    values: Vec<models::PullrequestComment>,
+) -> Vec<crate::model::PullRequestCommentRow> {
+    values.into_iter().map(pull_request_comment_to_row).collect()
+}
+
+fn pull_request_comment_to_row(comment: models::PullrequestComment) -> crate::model::PullRequestCommentRow {
+    crate::model::PullRequestCommentRow {
+        id: comment.id.unwrap_or(0),
+        author_display_name: comment.user.and_then(|u| u.display_name),
+        content_raw: comment.content.and_then(|c| c.raw),
+        inline: comment.inline.map(|i| crate::model::PullRequestInlineComment {
+            path: i.path,
+            from: i.from,
+            to: i.to,
+        }),
+        created_on: comment.created_on,
+        updated_on: comment.updated_on,
+    }
+}
+
+fn pull_request_to_detailed_row(
+    workspace_slug: &str,
+    repo_slug: &str,
+    pr: models::Pullrequest,
+) -> crate::model::PullRequestDetailedRow {
+    let common = pull_request_to_row(workspace_slug, repo_slug, pr.clone()).unwrap();
+    let description = pr.summary.and_then(|s| s.raw);
+    let reviewers = pr
+        .reviewers
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|r| r.display_name)
+        .collect();
+
+    crate::model::PullRequestDetailedRow {
+        common,
+        description,
+        reviewers,
+    }
+}
+
+impl BitbucketClient {
     async fn fetch_page<T: DeserializeOwned>(
         &self,
         url: &str,

@@ -18,7 +18,9 @@ use crate::cli::{PullRequestState, RepoRole};
 use crate::client::BitbucketClient;
 use crate::error::BbcliError;
 use crate::git;
-use crate::model::{PullRequestJsonRow, RepoJsonRow};
+use crate::model::{
+    PullRequestCommentJsonRow, PullRequestDetailedJsonRow, PullRequestJsonRow, RepoJsonRow,
+};
 
 const BITBUCKET_MACHINE: &str = "api.bitbucket.org";
 
@@ -82,21 +84,7 @@ impl BbMcpServer {
         Parameters(params): Parameters<ListPullRequestsParams>,
         context: RequestContext<RoleServer>,
     ) -> Result<Json<ListPullRequestsResult>, McpError> {
-        let (workspace_slug, repo_slug) = match (
-            params.workspace_slug.as_deref(),
-            params.repo_slug.as_deref(),
-        ) {
-            (Some(workspace_slug), Some(repo_slug)) => {
-                (workspace_slug.to_owned(), repo_slug.to_owned())
-            }
-            (None, None) => resolve_repo_from_context(context).await?,
-            _ => {
-                return Err(McpError::invalid_params(
-                    "workspace_slug and repo_slug must be provided together",
-                    None,
-                ));
-            }
-        };
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
 
         let pull_requests = self
             .client()
@@ -111,6 +99,180 @@ impl BbMcpServer {
         Ok(Json(ListPullRequestsResult {
             pull_requests: pull_requests.iter().map(PullRequestJsonRow::from).collect(),
         }))
+    }
+
+    #[tool(
+        name = "bitbucket.get_pull_request",
+        description = "Get detailed information about a single pull request.",
+        annotations(read_only_hint = true)
+    )]
+    async fn get_pull_request(
+        &self,
+        Parameters(params): Parameters<GetPullRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<PullRequestDetailedJsonRow>, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let pr = self
+            .client()
+            .get_pull_request(&workspace_slug, &repo_slug, params.pull_request_id)
+            .await
+            .map_err(|err| map_runtime_error("getting pull request", err))?;
+
+        Ok(Json(PullRequestDetailedJsonRow::from(&pr)))
+    }
+
+    #[tool(
+        name = "bitbucket.get_pull_request_diff",
+        description = "Get the raw diff of a pull request.",
+        annotations(read_only_hint = true)
+    )]
+    async fn get_pull_request_diff(
+        &self,
+        Parameters(params): Parameters<GetPullRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<String, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let diff = self
+            .client()
+            .get_pull_request_diff(&workspace_slug, &repo_slug, params.pull_request_id)
+            .await
+            .map_err(|err| map_runtime_error("getting pull request diff", err))?;
+
+        Ok(diff)
+    }
+
+    #[tool(
+        name = "bitbucket.list_pull_request_comments",
+        description = "List all comments on a pull request.",
+        annotations(read_only_hint = true)
+    )]
+    async fn list_pull_request_comments(
+        &self,
+        Parameters(params): Parameters<GetPullRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<ListPullRequestCommentsResult>, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let comments = self
+            .client()
+            .list_pull_request_comments(&workspace_slug, &repo_slug, params.pull_request_id)
+            .await
+            .map_err(|err| map_runtime_error("listing pull request comments", err))?;
+
+        Ok(Json(ListPullRequestCommentsResult {
+            comments: comments.iter().map(PullRequestCommentJsonRow::from).collect(),
+        }))
+    }
+
+    #[tool(
+        name = "bitbucket.create_pull_request_comment",
+        description = "Create a comment on a pull request. Can be a global comment or an inline comment on a specific file and line."
+    )]
+    async fn create_pull_request_comment(
+        &self,
+        Parameters(params): Parameters<CreatePullRequestCommentParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<PullRequestCommentJsonRow>, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let comment = self
+            .client()
+            .create_pull_request_comment(
+                &workspace_slug,
+                &repo_slug,
+                params.pull_request_id,
+                &params.content,
+                params.inline,
+            )
+            .await
+            .map_err(|err| map_runtime_error("creating pull request comment", err))?;
+
+        Ok(Json(PullRequestCommentJsonRow::from(&comment)))
+    }
+
+    #[tool(
+        name = "bitbucket.approve_pull_request",
+        description = "Approve a pull request."
+    )]
+    async fn approve_pull_request(
+        &self,
+        Parameters(params): Parameters<GetPullRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<String, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        self.client()
+            .approve_pull_request(&workspace_slug, &repo_slug, params.pull_request_id)
+            .await
+            .map_err(|err| map_runtime_error("approving pull request", err))?;
+
+        Ok(format!("Pull request #{} approved.", params.pull_request_id))
+    }
+
+    #[tool(
+        name = "bitbucket.unapprove_pull_request",
+        description = "Unapprove a pull request."
+    )]
+    async fn unapprove_pull_request(
+        &self,
+        Parameters(params): Parameters<GetPullRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<String, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        self.client()
+            .unapprove_pull_request(&workspace_slug, &repo_slug, params.pull_request_id)
+            .await
+            .map_err(|err| map_runtime_error("unapproving pull request", err))?;
+
+        Ok(format!("Pull request #{} unapproved.", params.pull_request_id))
+    }
+
+    #[tool(
+        name = "bitbucket.decline_pull_request",
+        description = "Decline a pull request."
+    )]
+    async fn decline_pull_request(
+        &self,
+        Parameters(params): Parameters<GetPullRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<String, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        self.client()
+            .decline_pull_request(&workspace_slug, &repo_slug, params.pull_request_id)
+            .await
+            .map_err(|err| map_runtime_error("declining pull request", err))?;
+
+        Ok(format!("Pull request #{} declined.", params.pull_request_id))
+    }
+
+    #[tool(
+        name = "bitbucket.merge_pull_request",
+        description = "Merge a pull request."
+    )]
+    async fn merge_pull_request(
+        &self,
+        Parameters(params): Parameters<MergePullRequestParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<String, McpError> {
+        let (workspace_slug, repo_slug) = resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        self.client()
+            .merge_pull_request(
+                &workspace_slug,
+                &repo_slug,
+                params.pull_request_id,
+                params.message,
+                params.close_source_branch,
+                params.merge_strategy.as_deref(),
+            )
+            .await
+            .map_err(|err| map_runtime_error("merging pull request", err))?;
+
+        Ok(format!("Pull request #{} merged.", params.pull_request_id))
     }
 }
 
@@ -127,6 +289,43 @@ struct ListPullRequestsParams {
     state: Option<PullRequestState>,
 }
 
+#[derive(Debug, Deserialize, JsonSchema)]
+struct GetPullRequestParams {
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    pull_request_id: i32,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct CreatePullRequestCommentParams {
+    /// The workspace containing the repository.
+    workspace_slug: Option<String>,
+    /// The repository slug.
+    repo_slug: Option<String>,
+    /// The pull request ID.
+    pull_request_id: i32,
+    /// The content of the comment in markdown format.
+    content: String,
+    /// Optional inline comment details.
+    inline: Option<crate::model::PullRequestInlineComment>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct MergePullRequestParams {
+    /// The workspace containing the repository.
+    workspace_slug: Option<String>,
+    /// The repository slug.
+    repo_slug: Option<String>,
+    /// The pull request ID.
+    pull_request_id: i32,
+    /// Optional commit message.
+    message: Option<String>,
+    /// Whether to delete the source branch after merging.
+    close_source_branch: Option<bool>,
+    /// Optional merge strategy: merge_commit, squash, fast_forward, squash_fast_forward, rebase_fast_forward, rebase_merge.
+    merge_strategy: Option<String>,
+}
+
 #[derive(Debug, Serialize, JsonSchema)]
 struct ListRepositoriesResult {
     repositories: Vec<RepoJsonRow>,
@@ -135,6 +334,26 @@ struct ListRepositoriesResult {
 #[derive(Debug, Serialize, JsonSchema)]
 struct ListPullRequestsResult {
     pull_requests: Vec<PullRequestJsonRow>,
+}
+
+#[derive(Debug, Serialize, JsonSchema)]
+struct ListPullRequestCommentsResult {
+    comments: Vec<PullRequestCommentJsonRow>,
+}
+
+async fn resolve_workspace_repo(
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    context: RequestContext<RoleServer>,
+) -> Result<(String, String), McpError> {
+    match (workspace_slug, repo_slug) {
+        (Some(w), Some(r)) => Ok((w, r)),
+        (None, None) => resolve_repo_from_context(context).await,
+        _ => Err(McpError::invalid_params(
+            "workspace_slug and repo_slug must be provided together",
+            None,
+        )),
+    }
 }
 
 pub async fn run_server() -> Result<(), BbcliError> {

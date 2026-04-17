@@ -1,5 +1,5 @@
 use schemars::JsonSchema;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct WorkspaceRef {
@@ -91,6 +91,31 @@ pub struct PullRequestJsonRow {
     pub updated_on: Option<String>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, JsonSchema)]
+pub struct PullRequestDetailedJsonRow {
+    #[serde(flatten)]
+    pub common: PullRequestJsonRow,
+    pub description: Option<String>,
+    pub reviewers: Vec<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, JsonSchema)]
+pub struct PullRequestCommentJsonRow {
+    pub id: i64,
+    pub author_display_name: Option<String>,
+    pub content_raw: Option<String>,
+    pub inline: Option<PullRequestInlineComment>,
+    pub created_on: Option<String>,
+    pub updated_on: Option<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct PullRequestInlineComment {
+    pub path: String,
+    pub from: Option<i32>,
+    pub to: Option<i32>,
+}
+
 impl From<&RepoRow> for RepoJsonRow {
     fn from(value: &RepoRow) -> Self {
         Self {
@@ -108,6 +133,23 @@ impl From<&RepoRow> for RepoJsonRow {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PullRequestDetailedRow {
+    pub common: PullRequestRow,
+    pub description: Option<String>,
+    pub reviewers: Vec<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PullRequestCommentRow {
+    pub id: i64,
+    pub author_display_name: Option<String>,
+    pub content_raw: Option<String>,
+    pub inline: Option<PullRequestInlineComment>,
+    pub created_on: Option<String>,
+    pub updated_on: Option<String>,
+}
+
 impl From<&PullRequestRow> for PullRequestJsonRow {
     fn from(value: &PullRequestRow) -> Self {
         Self {
@@ -122,6 +164,29 @@ impl From<&PullRequestRow> for PullRequestJsonRow {
             draft: value.draft,
             comment_count: value.comment_count,
             task_count: value.task_count,
+            created_on: value.created_on.clone(),
+            updated_on: value.updated_on.clone(),
+        }
+    }
+}
+
+impl From<&PullRequestDetailedRow> for PullRequestDetailedJsonRow {
+    fn from(value: &PullRequestDetailedRow) -> Self {
+        Self {
+            common: PullRequestJsonRow::from(&value.common),
+            description: value.description.clone(),
+            reviewers: value.reviewers.clone(),
+        }
+    }
+}
+
+impl From<&PullRequestCommentRow> for PullRequestCommentJsonRow {
+    fn from(value: &PullRequestCommentRow) -> Self {
+        Self {
+            id: value.id,
+            author_display_name: value.author_display_name.clone(),
+            content_raw: value.content_raw.clone(),
+            inline: value.inline.clone(),
             created_on: value.created_on.clone(),
             updated_on: value.updated_on.clone(),
         }
