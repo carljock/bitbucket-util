@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **param_self** | Option<[**models::PipelinesLinksSectionHref**](PipelinesLinksSectionHref.md)> |  | [optional]
 **steps** | Option<[**models::PipelinesLinksSectionHref**](PipelinesLinksSectionHref.md)> |  | [optional]
 

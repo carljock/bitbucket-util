@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **key** | Option<**String**> | The deploy key value. | [optional]
 **repository** | Option<[**models::Repository**](Repository.md)> |  | [optional]
 **comment** | Option<**String**> | The comment parsed from the deploy key (if present) | [optional]

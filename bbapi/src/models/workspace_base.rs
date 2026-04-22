@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WorkspaceBase {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::WorkspaceBaseLinks>>,
     /// The workspace's immutable id.
@@ -26,9 +26,9 @@ pub struct WorkspaceBase {
 }
 
 impl WorkspaceBase {
-    pub fn new(r#type: String) -> WorkspaceBase {
+    pub fn new() -> WorkspaceBase {
         WorkspaceBase {
-            r#type,
+            r#type: None,
             links: None,
             uuid: None,
             slug: None,

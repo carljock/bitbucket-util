@@ -13,17 +13,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineStepStateCompletedFailed {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The name of the result (FAILED)
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<Name>,
 }
 
 impl PipelineStepStateCompletedFailed {
-    pub fn new(r#type: String) -> PipelineStepStateCompletedFailed {
+    pub fn new() -> PipelineStepStateCompletedFailed {
         PipelineStepStateCompletedFailed {
-            r#type,
+            r#type: None,
             name: None,
         }
     }

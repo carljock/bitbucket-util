@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **hash** | Option<**String**> |  | [optional]
 **date** | Option<**String**> |  | [optional]
 **author** | Option<[**models::Author**](Author.md)> |  | [optional]

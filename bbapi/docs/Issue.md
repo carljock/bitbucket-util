@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::IssueLinks**](IssueLinks.md)> |  | [optional]
 **id** | Option<**i32**> |  | [optional]
 **repository** | Option<[**models::Repository**](Repository.md)> |  | [optional]

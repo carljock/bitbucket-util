@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineSshPublicKey {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The type of the public key.
     #[serde(rename = "key_type", skip_serializing_if = "Option::is_none")]
     pub key_type: Option<String>,
@@ -30,9 +30,9 @@ pub struct PipelineSshPublicKey {
 }
 
 impl PipelineSshPublicKey {
-    pub fn new(r#type: String) -> PipelineSshPublicKey {
+    pub fn new() -> PipelineSshPublicKey {
         PipelineSshPublicKey {
-            r#type,
+            r#type: None,
             key_type: None,
             key: None,
             md5_fingerprint: None,

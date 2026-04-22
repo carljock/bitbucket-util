@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **name** | Option<**Name**> | The name of deployment state (UNDEPLOYED). (enum: UNDEPLOYED) | [optional]
 **trigger_url** | Option<**String**> | Link to trigger the deployment. | [optional]
 

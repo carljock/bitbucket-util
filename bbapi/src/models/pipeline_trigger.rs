@@ -13,14 +13,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineTrigger {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
 }
 
 impl PipelineTrigger {
-    pub fn new(r#type: String) -> PipelineTrigger {
+    pub fn new() -> PipelineTrigger {
         PipelineTrigger {
-            r#type,
+            r#type: None,
         }
     }
 }

@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineRunnerState {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The current status of the runner.
     #[serde(rename = "status", skip_serializing_if = "Option::is_none")]
     pub status: Option<Status>,
@@ -29,9 +29,9 @@ pub struct PipelineRunnerState {
 }
 
 impl PipelineRunnerState {
-    pub fn new(r#type: String) -> PipelineRunnerState {
+    pub fn new() -> PipelineRunnerState {
         PipelineRunnerState {
-            r#type,
+            r#type: None,
             status: None,
             version: None,
             updated_on: None,

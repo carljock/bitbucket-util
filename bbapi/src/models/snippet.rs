@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Snippet {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,
     #[serde(rename = "title", skip_serializing_if = "Option::is_none")]
@@ -35,9 +35,9 @@ pub struct Snippet {
 }
 
 impl Snippet {
-    pub fn new(r#type: String) -> Snippet {
+    pub fn new() -> Snippet {
         Snippet {
-            r#type,
+            r#type: None,
             id: None,
             title: None,
             scm: None,

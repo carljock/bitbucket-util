@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **owner** | Option<[**models::Account**](Account.md)> |  | [optional]
 **key** | Option<**String**> | The GPG key value in X format. | [optional]
 **key_id** | Option<**String**> | The unique identifier for the GPG key | [optional]

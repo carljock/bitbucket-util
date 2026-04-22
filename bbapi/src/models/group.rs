@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Group {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::GroupLinks>>,
     #[serde(rename = "owner", skip_serializing_if = "Option::is_none")]
@@ -32,9 +32,9 @@ pub struct Group {
 }
 
 impl Group {
-    pub fn new(r#type: String) -> Group {
+    pub fn new() -> Group {
         Group {
-            r#type,
+            r#type: None,
             links: None,
             owner: None,
             workspace: None,

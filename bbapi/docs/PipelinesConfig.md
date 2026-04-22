@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **enabled** | Option<**bool**> | Whether Pipelines is enabled for the repository. | [optional]
 **repository** | Option<[**models::Repository**](Repository.md)> |  | [optional]
 

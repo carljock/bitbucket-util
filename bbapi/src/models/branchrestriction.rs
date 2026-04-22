@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Branchrestriction {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::BranchingModelSettingsLinks>>,
     /// The branch restriction status' id.
@@ -42,9 +42,9 @@ pub struct Branchrestriction {
 }
 
 impl Branchrestriction {
-    pub fn new(r#type: String, kind: Kind, branch_match_kind: BranchMatchKind, pattern: String) -> Branchrestriction {
+    pub fn new(kind: Kind, branch_match_kind: BranchMatchKind, pattern: String) -> Branchrestriction {
         Branchrestriction {
-            r#type,
+            r#type: None,
             links: None,
             id: None,
             kind,

@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::WorkspaceLinks**](WorkspaceLinks.md)> |  | [optional]
 **uuid** | Option<**String**> | The workspace's immutable id. | [optional]
 **name** | Option<**String**> | The name of the workspace. | [optional]

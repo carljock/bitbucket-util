@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **administrator** | Option<**bool**> | The permission level the user has for the workspace. True if the user is an administrator, otherwise False. | [optional]
 **workspace** | Option<[**models::WorkspaceBase**](WorkspaceBase.md)> |  | [optional]
 

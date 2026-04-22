@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **key_type** | Option<**String**> | The type of the public key. | [optional]
 **key** | Option<**String**> | The base64 encoded public key. | [optional]
 **md5_fingerprint** | Option<**String**> | The MD5 fingerprint of the public key. | [optional]

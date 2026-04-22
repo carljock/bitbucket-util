@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineRunner {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID identifying the runner.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -37,9 +37,9 @@ pub struct PipelineRunner {
 }
 
 impl PipelineRunner {
-    pub fn new(r#type: String) -> PipelineRunner {
+    pub fn new() -> PipelineRunner {
         PipelineRunner {
-            r#type,
+            r#type: None,
             uuid: None,
             name: None,
             labels: None,

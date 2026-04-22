@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the pipeline. | [optional]
 **build_number** | Option<**i32**> | The build number of the pipeline. | [optional]
 **creator** | Option<[**models::Account**](Account.md)> |  | [optional]

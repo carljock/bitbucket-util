@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the schedule. | [optional]
 **enabled** | Option<**bool**> | Whether the schedule is enabled. | [optional]
 **target** | Option<[**models::PipelineRefTarget**](PipelineRefTarget.md)> |  | [optional]

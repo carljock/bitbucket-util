@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::PullRequestLinks**](PullRequestLinks.md)> |  | [optional]
 **id** | Option<**i32**> | The pull request's unique ID. Note that pull request IDs are only unique within their associated repository. | [optional]
 **title** | Option<**String**> | Title of the pull request. | [optional]

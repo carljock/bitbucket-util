@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the deployment. | [optional]
 **state** | Option<[**models::DeploymentState**](DeploymentState.md)> |  | [optional]
 **environment** | Option<[**models::DeploymentEnvironment**](DeploymentEnvironment.md)> |  | [optional]

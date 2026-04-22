@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineStateInProgress {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The name of pipeline state (IN_PROGRESS).
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<Name>,
@@ -23,9 +23,9 @@ pub struct PipelineStateInProgress {
 }
 
 impl PipelineStateInProgress {
-    pub fn new(r#type: String) -> PipelineStateInProgress {
+    pub fn new() -> PipelineStateInProgress {
         PipelineStateInProgress {
-            r#type,
+            r#type: None,
             name: None,
             stage: None,
         }

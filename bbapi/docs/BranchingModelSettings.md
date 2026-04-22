@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::BranchingModelSettingsLinks**](BranchingModelSettingsLinks.md)> |  | [optional]
 **branch_types** | Option<[**HashSet<models::BranchingModelSettingsBranchTypes>**](BranchingModelSettingsBranchTypes.md)> |  | [optional]
 **development** | Option<[**models::BranchingModelSettingsDevelopment**](BranchingModelSettingsDevelopment.md)> |  | [optional]

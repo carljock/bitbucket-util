@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::BranchingModelSettingsLinks**](BranchingModelSettingsLinks.md)> |  | [optional]
 **id** | Option<**i32**> | The branch restriction status' id. | [optional]
 **kind** | **Kind** | The type of restriction that is being applied. (enum: push, delete, force, restrict_merges, require_tasks_to_be_completed, require_approvals_to_merge, require_review_group_approvals_to_merge, require_default_reviewer_approvals_to_merge, require_no_changes_requested, require_passing_builds_to_merge, require_commits_behind, reset_pullrequest_approvals_on_change, smart_reset_pullrequest_approvals, reset_pullrequest_changes_requested_on_change, require_all_dependencies_merged, enforce_merge_checks, allow_auto_merge_when_builds_pass, require_all_comments_resolved) | 

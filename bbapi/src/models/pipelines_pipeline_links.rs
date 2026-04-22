@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelinesPipelineLinks {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "self", skip_serializing_if = "Option::is_none")]
     pub param_self: Option<Box<models::PipelinesLinksSectionHref>>,
     #[serde(rename = "steps", skip_serializing_if = "Option::is_none")]
@@ -22,9 +22,9 @@ pub struct PipelinesPipelineLinks {
 }
 
 impl PipelinesPipelineLinks {
-    pub fn new(r#type: String) -> PipelinesPipelineLinks {
+    pub fn new() -> PipelinesPipelineLinks {
         PipelinesPipelineLinks {
-            r#type,
+            r#type: None,
             param_self: None,
             steps: None,
         }

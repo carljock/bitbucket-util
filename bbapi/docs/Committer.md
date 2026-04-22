@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **raw** | Option<**String**> | The raw committer value from the repository. This may be the only value available if the committer does not match a user in Bitbucket. | [optional]
 **user** | Option<[**models::Account**](Account.md)> |  | [optional]
 

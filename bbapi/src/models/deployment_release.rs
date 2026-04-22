@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct DeploymentRelease {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID identifying the release.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -32,9 +32,9 @@ pub struct DeploymentRelease {
 }
 
 impl DeploymentRelease {
-    pub fn new(r#type: String) -> DeploymentRelease {
+    pub fn new() -> DeploymentRelease {
         DeploymentRelease {
-            r#type,
+            r#type: None,
             uuid: None,
             name: None,
             url: None,

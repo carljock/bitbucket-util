@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the release. | [optional]
 **name** | Option<**String**> | The name of the release. | [optional]
 **url** | Option<**String**> | Link to the pipeline that produced the release. | [optional]

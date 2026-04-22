@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID that can be used to identify the report. | [optional]
 **title** | Option<**String**> | The title of the report. | [optional]
 **details** | Option<**String**> | A string to describe the purpose of the report. | [optional]

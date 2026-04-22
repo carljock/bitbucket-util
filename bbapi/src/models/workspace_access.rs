@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WorkspaceAccess {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The permission level the user has for the workspace. True if the user is an administrator, otherwise False.
     #[serde(rename = "administrator", skip_serializing_if = "Option::is_none")]
     pub administrator: Option<bool>,
@@ -23,9 +23,9 @@ pub struct WorkspaceAccess {
 }
 
 impl WorkspaceAccess {
-    pub fn new(r#type: String) -> WorkspaceAccess {
+    pub fn new() -> WorkspaceAccess {
         WorkspaceAccess {
-            r#type,
+            r#type: None,
             administrator: None,
             workspace: None,
         }

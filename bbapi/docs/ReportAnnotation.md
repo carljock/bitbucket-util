@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **external_id** | Option<**String**> | ID of the annotation provided by the annotation creator. It can be used to identify the annotation as an alternative to it's generated uuid. It is not used by Bitbucket, but only by the annotation creator for updating or deleting this specific annotation. Needs to be unique. | [optional]
 **uuid** | Option<**String**> | The UUID that can be used to identify the annotation. | [optional]
 **annotation_type** | Option<**AnnotationType**> | The type of the report. (enum: VULNERABILITY, CODE_SMELL, BUG) | [optional]

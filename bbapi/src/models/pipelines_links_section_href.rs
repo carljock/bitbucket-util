@@ -13,17 +13,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelinesLinksSectionHref {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// A link
     #[serde(rename = "href", skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
 }
 
 impl PipelinesLinksSectionHref {
-    pub fn new(r#type: String) -> PipelinesLinksSectionHref {
+    pub fn new() -> PipelinesLinksSectionHref {
         PipelinesLinksSectionHref {
-            r#type,
+            r#type: None,
             href: None,
         }
     }

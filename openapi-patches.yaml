@@ -16,3 +16,17 @@ patches:
     type: "make_field_optional"
     schema: "comment_resolution"
     field: "type"
+
+  - name: "Fix object required type field"
+    reason: |
+      The API returns parent comment objects without the 'type' field. Parent
+      comments in pullrequest_comment.parent only include 'id' and 'links'
+      fields, but they inherit from 'object' schema which declares 'type' as
+      required with a discriminator. Making the discriminator optional allows
+      deserialization of partial objects.
+
+      Issue: "error: parse error during list pull request comments pagination:
+      missing field `type` at line 1 column 40305"
+    type: "make_field_optional"
+    schema: "object"
+    field: "type"

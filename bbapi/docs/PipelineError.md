@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **key** | Option<**String**> | The error key. | [optional]
 **message** | Option<**String**> | The error message. | [optional]
 

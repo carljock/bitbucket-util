@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The webhook's id | [optional]
 **url** | Option<**String**> | The URL events get delivered to. | [optional]
 **description** | Option<**String**> | A user-defined description of the webhook. | [optional]

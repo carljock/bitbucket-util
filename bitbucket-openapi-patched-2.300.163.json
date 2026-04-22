@@ -32880,9 +32880,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "type"
-        ],
         "additionalProperties": true,
         "discriminator": {
           "propertyName": "type"

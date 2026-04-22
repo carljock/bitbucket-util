@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **status** | Option<**Status**> | The current status of the runner. (enum: UNREGISTERED, ONLINE, OFFLINE, DISABLED, ENABLED, UNHEALTHY) | [optional]
 **version** | Option<[**models::PipelineRunnerVersion**](PipelineRunnerVersion.md)> |  | [optional]
 **updated_on** | Option<**String**> | The timestamp when the runner state was last updated. | [optional]

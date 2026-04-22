@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **private_key** | Option<**String**> | The SSH private key. This value will be empty when retrieving the SSH key pair. | [optional]
 **public_key** | Option<**String**> | The SSH public key. | [optional]
 

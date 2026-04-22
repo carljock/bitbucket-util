@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **version** | Option<**String**> | The currently installed version of the runner. | [optional]
 **current** | Option<**String**> | The current recommended version of the runner. | [optional]
 

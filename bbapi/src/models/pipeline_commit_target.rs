@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineCommitTarget {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
     pub commit: Option<Box<models::Commit>>,
     #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
@@ -22,9 +22,9 @@ pub struct PipelineCommitTarget {
 }
 
 impl PipelineCommitTarget {
-    pub fn new(r#type: String) -> PipelineCommitTarget {
+    pub fn new() -> PipelineCommitTarget {
         PipelineCommitTarget {
-            r#type,
+            r#type: None,
             commit: None,
             selector: None,
         }

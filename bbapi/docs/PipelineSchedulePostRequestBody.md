@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **target** | [**models::RequestBodyForPipelineSchedulePostRequestTarget**](RequestBodyForPipelineSchedulePOSTRequestTarget.md) |  | 
 **enabled** | Option<**bool**> | Whether the schedule is enabled. | [optional]
 **cron_pattern** | **String** | The cron expression with second precision (7 fields) that the schedule applies. For example, for expression: 0 0 12 * * ? *, will execute at 12pm UTC every day. | 

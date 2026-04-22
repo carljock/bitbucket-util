@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineStateCompletedError {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The name of the result (ERROR)
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<Name>,
@@ -23,9 +23,9 @@ pub struct PipelineStateCompletedError {
 }
 
 impl PipelineStateCompletedError {
-    pub fn new(r#type: String) -> PipelineStateCompletedError {
+    pub fn new() -> PipelineStateCompletedError {
         PipelineStateCompletedError {
-            r#type,
+            r#type: None,
             name: None,
             error: None,
         }

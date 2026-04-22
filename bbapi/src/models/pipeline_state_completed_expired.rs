@@ -13,17 +13,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineStateCompletedExpired {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The name of the stopped result (EXPIRED).
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<Name>,
 }
 
 impl PipelineStateCompletedExpired {
-    pub fn new(r#type: String) -> PipelineStateCompletedExpired {
+    pub fn new() -> PipelineStateCompletedExpired {
         PipelineStateCompletedExpired {
-            r#type,
+            r#type: None,
             name: None,
         }
     }

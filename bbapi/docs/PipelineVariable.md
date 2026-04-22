@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the variable. | [optional]
 **key** | Option<**String**> | The unique name of the variable. | [optional]
 **value** | Option<**String**> | The value of the variable. If the variable is secured, this will be empty. | [optional]

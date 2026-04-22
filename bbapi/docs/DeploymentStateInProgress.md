@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **name** | Option<**Name**> | The name of deployment state (IN_PROGRESS). (enum: IN_PROGRESS) | [optional]
 **url** | Option<**String**> | Link to the deployment result. | [optional]
 **deployer** | Option<[**models::Account**](Account.md)> |  | [optional]

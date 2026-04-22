@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Report {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID that can be used to identify the report.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -57,9 +57,9 @@ pub struct Report {
 }
 
 impl Report {
-    pub fn new(r#type: String) -> Report {
+    pub fn new() -> Report {
         Report {
-            r#type,
+            r#type: None,
             uuid: None,
             title: None,
             details: None,

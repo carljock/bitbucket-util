@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The SSH key's immutable ID. | [optional]
 **key** | Option<**String**> | The SSH public key value in OpenSSH format. | [optional]
 **comment** | Option<**String**> | The comment parsed from the SSH key (if present) | [optional]

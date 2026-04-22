@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct DeploymentVariable {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID identifying the variable.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -30,9 +30,9 @@ pub struct DeploymentVariable {
 }
 
 impl DeploymentVariable {
-    pub fn new(r#type: String) -> DeploymentVariable {
+    pub fn new() -> DeploymentVariable {
         DeploymentVariable {
-            r#type,
+            r#type: None,
             uuid: None,
             key: None,
             value: None,

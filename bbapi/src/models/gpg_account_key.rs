@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GpgAccountKey {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "owner", skip_serializing_if = "Option::is_none")]
     pub owner: Option<Box<models::Account>>,
     /// The GPG key value in X format.
@@ -50,9 +50,9 @@ pub struct GpgAccountKey {
 }
 
 impl GpgAccountKey {
-    pub fn new(r#type: String) -> GpgAccountKey {
+    pub fn new() -> GpgAccountKey {
         GpgAccountKey {
-            r#type,
+            r#type: None,
             owner: None,
             key: None,
             key_id: None,

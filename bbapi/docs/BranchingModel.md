@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **branch_types** | Option<[**HashSet<models::ProjectBranchingModelBranchTypes>**](ProjectBranchingModelBranchTypes.md)> | The active branch types. | [optional]
 **development** | Option<[**models::BranchingModelDevelopment**](BranchingModelDevelopment.md)> |  | [optional]
 **production** | Option<[**models::BranchingModelDevelopment**](BranchingModelDevelopment.md)> |  | [optional]

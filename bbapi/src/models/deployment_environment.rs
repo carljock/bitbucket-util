@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct DeploymentEnvironment {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID identifying the environment.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -24,9 +24,9 @@ pub struct DeploymentEnvironment {
 }
 
 impl DeploymentEnvironment {
-    pub fn new(r#type: String) -> DeploymentEnvironment {
+    pub fn new() -> DeploymentEnvironment {
         DeploymentEnvironment {
-            r#type,
+            r#type: None,
             uuid: None,
             name: None,
         }

@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Comment {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
     pub id: Option<i64>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
@@ -36,9 +36,9 @@ pub struct Comment {
 }
 
 impl Comment {
-    pub fn new(r#type: String) -> Comment {
+    pub fn new() -> Comment {
         Comment {
-            r#type,
+            r#type: None,
             id: None,
             created_on: None,
             updated_on: None,

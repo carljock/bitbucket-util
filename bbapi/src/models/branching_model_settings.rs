@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BranchingModelSettings {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::BranchingModelSettingsLinks>>,
     #[serde(rename = "branch_types", skip_serializing_if = "Option::is_none")]
@@ -26,9 +26,9 @@ pub struct BranchingModelSettings {
 }
 
 impl BranchingModelSettings {
-    pub fn new(r#type: String) -> BranchingModelSettings {
+    pub fn new() -> BranchingModelSettings {
         BranchingModelSettings {
-            r#type,
+            r#type: None,
             links: None,
             branch_types: None,
             development: None,

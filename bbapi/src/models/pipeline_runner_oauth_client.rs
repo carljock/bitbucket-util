@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineRunnerOauthClient {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The OAuth client ID.
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -30,9 +30,9 @@ pub struct PipelineRunnerOauthClient {
 }
 
 impl PipelineRunnerOauthClient {
-    pub fn new(r#type: String) -> PipelineRunnerOauthClient {
+    pub fn new() -> PipelineRunnerOauthClient {
         PipelineRunnerOauthClient {
-            r#type,
+            r#type: None,
             id: None,
             secret: None,
             token_endpoint: None,

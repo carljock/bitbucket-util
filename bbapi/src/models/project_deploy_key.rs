@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ProjectDeployKey {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The deploy key value.
     #[serde(rename = "key", skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,
@@ -37,9 +37,9 @@ pub struct ProjectDeployKey {
 }
 
 impl ProjectDeployKey {
-    pub fn new(r#type: String) -> ProjectDeployKey {
+    pub fn new() -> ProjectDeployKey {
         ProjectDeployKey {
-            r#type,
+            r#type: None,
             key: None,
             project: None,
             comment: None,

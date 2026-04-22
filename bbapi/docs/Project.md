@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::ProjectLinks**](ProjectLinks.md)> |  | [optional]
 **uuid** | Option<**String**> | The project's immutable id. | [optional]
 **key** | Option<**String**> | The project's key. | [optional]

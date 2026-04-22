@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **commit** | Option<[**models::Commit**](Commit.md)> |  | [optional]
 **selector** | Option<[**models::PipelineSelector**](PipelineSelector.md)> |  | [optional]
 

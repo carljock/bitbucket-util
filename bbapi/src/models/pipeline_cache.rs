@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineCache {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID identifying the pipeline cache.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -42,9 +42,9 @@ pub struct PipelineCache {
 }
 
 impl PipelineCache {
-    pub fn new(r#type: String) -> PipelineCache {
+    pub fn new() -> PipelineCache {
         PipelineCache {
-            r#type,
+            r#type: None,
             uuid: None,
             pipeline_uuid: None,
             step_uuid: None,

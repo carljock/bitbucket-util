@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineSshKeyPair {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The SSH private key. This value will be empty when retrieving the SSH key pair.
     #[serde(rename = "private_key", skip_serializing_if = "Option::is_none")]
     pub private_key: Option<String>,
@@ -24,9 +24,9 @@ pub struct PipelineSshKeyPair {
 }
 
 impl PipelineSshKeyPair {
-    pub fn new(r#type: String) -> PipelineSshKeyPair {
+    pub fn new() -> PipelineSshKeyPair {
         PipelineSshKeyPair {
-            r#type,
+            r#type: None,
             private_key: None,
             public_key: None,
         }

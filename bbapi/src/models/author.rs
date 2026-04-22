@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Author {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The raw author value from the repository. This may be the only value available if the author does not match a user in Bitbucket.
     #[serde(rename = "raw", skip_serializing_if = "Option::is_none")]
     pub raw: Option<String>,
@@ -23,9 +23,9 @@ pub struct Author {
 }
 
 impl Author {
-    pub fn new(r#type: String) -> Author {
+    pub fn new() -> Author {
         Author {
-            r#type,
+            r#type: None,
             raw: None,
             user: None,
         }

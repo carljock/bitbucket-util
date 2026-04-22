@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineRunnerVersion {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The currently installed version of the runner.
     #[serde(rename = "version", skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
@@ -24,9 +24,9 @@ pub struct PipelineRunnerVersion {
 }
 
 impl PipelineRunnerVersion {
-    pub fn new(r#type: String) -> PipelineRunnerVersion {
+    pub fn new() -> PipelineRunnerVersion {
         PipelineRunnerVersion {
-            r#type,
+            r#type: None,
             version: None,
             current: None,
         }

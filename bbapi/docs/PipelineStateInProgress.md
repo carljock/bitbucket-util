@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **name** | Option<**Name**> | The name of pipeline state (IN_PROGRESS). (enum: IN_PROGRESS) | [optional]
 **stage** | Option<[**models::PipelineStateInProgressStage**](PipelineStateInProgressStage.md)> |  | [optional]
 

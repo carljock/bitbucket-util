@@ -243,7 +243,8 @@ impl BitbucketClient {
         content: &str,
         inline: Option<crate::model::PullRequestInlineComment>,
     ) -> Result<crate::model::PullRequestCommentRow, BbcliError> {
-        let mut comment = models::PullrequestComment::new("pullrequest_comment".to_owned());
+        let mut comment = models::PullrequestComment::new();
+        comment.r#type = Some("pullrequest_comment".to_owned());
         comment.content = Some(Box::new(models::CommentContent {
             raw: Some(content.to_owned()),
             ..Default::default()
@@ -745,7 +746,7 @@ mod tests {
     #[test]
     fn repository_to_repo_row_maps_extended_json_fields() {
         let repository = models::Repository {
-            r#type: "repository".into(),
+            r#type: Some("repository".into()),
             uuid: Some("{abc}".into()),
             full_name: Some("acme/repo".into()),
             name: Some("repo".into()),
@@ -791,7 +792,7 @@ mod tests {
     #[test]
     fn pull_request_to_row_maps_extended_json_fields() {
         let pull_request = models::Pullrequest {
-            r#type: "pullrequest".into(),
+            r#type: Some("pullrequest".into()),
             id: Some(42),
             title: Some("Improve auth".into()),
             state: Some(models::pullrequest::State::Open),
@@ -803,7 +804,7 @@ mod tests {
                 ..Default::default()
             })),
             author: Some(Box::new(models::Account {
-                r#type: "account".into(),
+                r#type: Some("account".into()),
                 display_name: Some("Alice".into()),
                 ..Default::default()
             })),

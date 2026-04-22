@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Pullrequest {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::PullRequestLinks>>,
     /// The pull request's unique ID. Note that pull request IDs are only unique within their associated repository.
@@ -73,9 +73,9 @@ pub struct Pullrequest {
 }
 
 impl Pullrequest {
-    pub fn new(r#type: String) -> Pullrequest {
+    pub fn new() -> Pullrequest {
         Pullrequest {
-            r#type,
+            r#type: None,
             links: None,
             id: None,
             title: None,

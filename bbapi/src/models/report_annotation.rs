@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ReportAnnotation {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// ID of the annotation provided by the annotation creator. It can be used to identify the annotation as an alternative to it's generated uuid. It is not used by Bitbucket, but only by the annotation creator for updating or deleting this specific annotation. Needs to be unique.
     #[serde(rename = "external_id", skip_serializing_if = "Option::is_none")]
     pub external_id: Option<String>,
@@ -54,9 +54,9 @@ pub struct ReportAnnotation {
 }
 
 impl ReportAnnotation {
-    pub fn new(r#type: String) -> ReportAnnotation {
+    pub fn new() -> ReportAnnotation {
         ReportAnnotation {
-            r#type,
+            r#type: None,
             external_id: None,
             uuid: None,
             annotation_type: None,

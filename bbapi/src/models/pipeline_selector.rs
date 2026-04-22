@@ -14,17 +14,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineSelector {
     /// The type of selector.
-    #[serde(rename = "type")]
-    pub r#type: Type,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<Type>,
     /// The name of the matching pipeline definition.
     #[serde(rename = "pattern", skip_serializing_if = "Option::is_none")]
     pub pattern: Option<String>,
 }
 
 impl PipelineSelector {
-    pub fn new(r#type: Type) -> PipelineSelector {
+    pub fn new() -> PipelineSelector {
         PipelineSelector {
-            r#type,
+            r#type: None,
             pattern: None,
         }
     }

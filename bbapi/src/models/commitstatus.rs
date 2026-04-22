@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Commitstatus {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::CommitStatusLinks>>,
     /// An identifier for the status that's unique to         its type (current \"build\" is the only supported type) and the vendor,         e.g. BB-DEPLOY
@@ -42,9 +42,9 @@ pub struct Commitstatus {
 }
 
 impl Commitstatus {
-    pub fn new(r#type: String, key: String, state: State) -> Commitstatus {
+    pub fn new(key: String, state: State) -> Commitstatus {
         Commitstatus {
-            r#type,
+            r#type: None,
             links: None,
             key,
             refname: None,

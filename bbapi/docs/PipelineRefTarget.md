@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **ref_type** | Option<**RefType**> | The type of reference (branch/tag). (enum: branch, tag, named_branch, bookmark) | [optional]
 **ref_name** | Option<**String**> | The name of the reference. | [optional]
 **commit** | Option<[**models::Commit**](Commit.md)> |  | [optional]

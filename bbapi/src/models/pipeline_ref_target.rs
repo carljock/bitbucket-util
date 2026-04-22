@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineRefTarget {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The type of reference (branch/tag).
     #[serde(rename = "ref_type", skip_serializing_if = "Option::is_none")]
     pub ref_type: Option<RefType>,
@@ -28,9 +28,9 @@ pub struct PipelineRefTarget {
 }
 
 impl PipelineRefTarget {
-    pub fn new(r#type: String) -> PipelineRefTarget {
+    pub fn new() -> PipelineRefTarget {
         PipelineRefTarget {
-            r#type,
+            r#type: None,
             ref_type: None,
             ref_name: None,
             commit: None,

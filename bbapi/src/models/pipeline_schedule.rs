@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineSchedule {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID identifying the schedule.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -35,9 +35,9 @@ pub struct PipelineSchedule {
 }
 
 impl PipelineSchedule {
-    pub fn new(r#type: String) -> PipelineSchedule {
+    pub fn new() -> PipelineSchedule {
         PipelineSchedule {
-            r#type,
+            r#type: None,
             uuid: None,
             enabled: None,
             target: None,

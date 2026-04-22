@@ -13,17 +13,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineSchedulePutRequestBody {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// Whether the schedule is enabled.
     #[serde(rename = "enabled", skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
 }
 
 impl PipelineSchedulePutRequestBody {
-    pub fn new(r#type: String) -> PipelineSchedulePutRequestBody {
+    pub fn new() -> PipelineSchedulePutRequestBody {
         PipelineSchedulePutRequestBody {
-            r#type,
+            r#type: None,
             enabled: None,
         }
     }

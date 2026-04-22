@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SshAccountKey {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The SSH key's immutable ID.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -43,9 +43,9 @@ pub struct SshAccountKey {
 }
 
 impl SshAccountKey {
-    pub fn new(r#type: String) -> SshAccountKey {
+    pub fn new() -> SshAccountKey {
         SshAccountKey {
-            r#type,
+            r#type: None,
             uuid: None,
             key: None,
             comment: None,

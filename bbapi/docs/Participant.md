@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **user** | Option<[**models::Account**](Account.md)> |  | [optional]
 **role** | Option<**Role**> |  (enum: PARTICIPANT, REVIEWER) | [optional]
 **approved** | Option<**bool**> |  | [optional]

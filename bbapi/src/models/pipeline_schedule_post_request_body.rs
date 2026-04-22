@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineSchedulePostRequestBody {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "target")]
     pub target: Box<models::RequestBodyForPipelineSchedulePostRequestTarget>,
     /// Whether the schedule is enabled.
@@ -26,9 +26,9 @@ pub struct PipelineSchedulePostRequestBody {
 }
 
 impl PipelineSchedulePostRequestBody {
-    pub fn new(r#type: String, target: models::RequestBodyForPipelineSchedulePostRequestTarget, cron_pattern: String) -> PipelineSchedulePostRequestBody {
+    pub fn new(target: models::RequestBodyForPipelineSchedulePostRequestTarget, cron_pattern: String) -> PipelineSchedulePostRequestBody {
         PipelineSchedulePostRequestBody {
-            r#type,
+            r#type: None,
             target: Box::new(target),
             enabled: None,
             cron_pattern,

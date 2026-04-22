@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Issue {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::IssueLinks>>,
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
@@ -52,9 +52,9 @@ pub struct Issue {
 }
 
 impl Issue {
-    pub fn new(r#type: String) -> Issue {
+    pub fn new() -> Issue {
         Issue {
-            r#type,
+            r#type: None,
             links: None,
             id: None,
             repository: None,

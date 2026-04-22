@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::TeamLinks**](TeamLinks.md)> |  | [optional]
 **created_on** | Option<**String**> |  | [optional]
 **display_name** | Option<**String**> |  | [optional]

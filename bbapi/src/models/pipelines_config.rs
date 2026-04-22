@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelinesConfig {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// Whether Pipelines is enabled for the repository.
     #[serde(rename = "enabled", skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
@@ -23,9 +23,9 @@ pub struct PipelinesConfig {
 }
 
 impl PipelinesConfig {
-    pub fn new(r#type: String) -> PipelinesConfig {
+    pub fn new() -> PipelinesConfig {
         PipelinesConfig {
-            r#type,
+            r#type: None,
             enabled: None,
             repository: None,
         }

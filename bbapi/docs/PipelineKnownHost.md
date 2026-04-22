@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the known host. | [optional]
 **hostname** | Option<**String**> | The hostname of the known host. | [optional]
 **public_key** | Option<[**models::PipelineSshPublicKey**](PipelineSshPublicKey.md)> |  | [optional]

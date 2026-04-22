@@ -13,16 +13,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineScheduleExecutionErrored {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "error", skip_serializing_if = "Option::is_none")]
     pub error: Option<Box<models::PipelineError>>,
 }
 
 impl PipelineScheduleExecutionErrored {
-    pub fn new(r#type: String) -> PipelineScheduleExecutionErrored {
+    pub fn new() -> PipelineScheduleExecutionErrored {
         PipelineScheduleExecutionErrored {
-            r#type,
+            r#type: None,
             error: None,
         }
     }

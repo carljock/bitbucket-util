@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BaseCommit {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "hash", skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,
     #[serde(rename = "date", skip_serializing_if = "Option::is_none")]
@@ -32,9 +32,9 @@ pub struct BaseCommit {
 }
 
 impl BaseCommit {
-    pub fn new(r#type: String) -> BaseCommit {
+    pub fn new() -> BaseCommit {
         BaseCommit {
-            r#type,
+            r#type: None,
             hash: None,
             date: None,
             author: None,

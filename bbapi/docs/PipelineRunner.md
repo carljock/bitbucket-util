@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the runner. | [optional]
 **name** | Option<**String**> | The name of the runner. | [optional]
 **labels** | Option<**Vec<String>**> | Labels assigned to the runner for identification and routing. | [optional]

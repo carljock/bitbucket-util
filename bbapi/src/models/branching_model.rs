@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BranchingModel {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The active branch types.
     #[serde(rename = "branch_types", skip_serializing_if = "Option::is_none")]
     pub branch_types: Option<Vec<models::ProjectBranchingModelBranchTypes>>,
@@ -25,9 +25,9 @@ pub struct BranchingModel {
 }
 
 impl BranchingModel {
-    pub fn new(r#type: String) -> BranchingModel {
+    pub fn new() -> BranchingModel {
         BranchingModel {
-            r#type,
+            r#type: None,
             branch_types: None,
             development: None,
             production: None,

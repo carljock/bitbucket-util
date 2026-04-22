@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **name** | Option<**Name**> | The name of the result (ERROR) (enum: ERROR) | [optional]
 **error** | Option<[**models::PipelineError**](PipelineError.md)> |  | [optional]
 

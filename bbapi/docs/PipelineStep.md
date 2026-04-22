@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the step. | [optional]
 **started_on** | Option<**String**> | The timestamp when the step execution was started. This is not set when the step hasn't executed yet. | [optional]
 **completed_on** | Option<**String**> | The timestamp when the step execution was completed. This is not set if the step is still in progress. | [optional]

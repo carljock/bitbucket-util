@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::GroupLinks**](GroupLinks.md)> |  | [optional]
 **snippet** | Option<[**models::Snippet**](Snippet.md)> |  | [optional]
 

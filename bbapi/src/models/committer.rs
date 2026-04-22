@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Committer {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The raw committer value from the repository. This may be the only value available if the committer does not match a user in Bitbucket.
     #[serde(rename = "raw", skip_serializing_if = "Option::is_none")]
     pub raw: Option<String>,
@@ -23,9 +23,9 @@ pub struct Committer {
 }
 
 impl Committer {
-    pub fn new(r#type: String) -> Committer {
+    pub fn new() -> Committer {
         Committer {
-            r#type,
+            r#type: None,
             raw: None,
             user: None,
         }

@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Repository {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::RepositoryLinks>>,
     /// The repository's immutable id. This can be used as a substitute for the slug segment in URLs. Doing this guarantees your URLs will survive renaming of the repository by its owner, or even transfer of the repository to a different user.
@@ -59,9 +59,9 @@ pub struct Repository {
 }
 
 impl Repository {
-    pub fn new(r#type: String) -> Repository {
+    pub fn new() -> Repository {
         Repository {
-            r#type,
+            r#type: None,
             links: None,
             uuid: None,
             full_name: None,

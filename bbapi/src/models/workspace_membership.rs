@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WorkspaceMembership {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::BranchingModelSettingsLinks>>,
     #[serde(rename = "user", skip_serializing_if = "Option::is_none")]
@@ -24,9 +24,9 @@ pub struct WorkspaceMembership {
 }
 
 impl WorkspaceMembership {
-    pub fn new(r#type: String) -> WorkspaceMembership {
+    pub fn new() -> WorkspaceMembership {
         WorkspaceMembership {
-            r#type,
+            r#type: None,
             links: None,
             user: None,
             workspace: None,

@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **name** | Option<**Name**> | The name of pipeline state (COMPLETED). (enum: COMPLETED) | [optional]
 **result** | Option<[**models::PipelineStateCompletedResult**](PipelineStateCompletedResult.md)> |  | [optional]
 

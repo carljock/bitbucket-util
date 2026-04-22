@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Participant {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "user", skip_serializing_if = "Option::is_none")]
     pub user: Option<Box<models::Account>>,
     #[serde(rename = "role", skip_serializing_if = "Option::is_none")]
@@ -29,9 +29,9 @@ pub struct Participant {
 }
 
 impl Participant {
-    pub fn new(r#type: String) -> Participant {
+    pub fn new() -> Participant {
         Participant {
-            r#type,
+            r#type: None,
             user: None,
             role: None,
             approved: None,

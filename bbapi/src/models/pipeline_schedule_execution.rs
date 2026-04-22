@@ -13,14 +13,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineScheduleExecution {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
 }
 
 impl PipelineScheduleExecution {
-    pub fn new(r#type: String) -> PipelineScheduleExecution {
+    pub fn new() -> PipelineScheduleExecution {
         PipelineScheduleExecution {
-            r#type,
+            r#type: None,
         }
     }
 }

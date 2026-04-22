@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the pipeline cache. | [optional]
 **pipeline_uuid** | Option<**String**> | The UUID of the pipeline that created the cache. | [optional]
 **step_uuid** | Option<**String**> | The uuid of the step that created the cache. | [optional]

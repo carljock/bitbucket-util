@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | **String** |  | 
+**r#type** | Option<**String**> |  | [optional]
 **id** | Option<**i32**> |  | [optional]
 **title** | Option<**String**> |  | [optional]
 **scm** | Option<**Scm**> | The DVCS used to store the snippet. (enum: git) | [optional]

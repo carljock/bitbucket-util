@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Deployment {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     /// The UUID identifying the deployment.
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]
     pub uuid: Option<String>,
@@ -27,9 +27,9 @@ pub struct Deployment {
 }
 
 impl Deployment {
-    pub fn new(r#type: String) -> Deployment {
+    pub fn new() -> Deployment {
         Deployment {
-            r#type,
+            r#type: None,
             uuid: None,
             state: None,
             environment: None,
