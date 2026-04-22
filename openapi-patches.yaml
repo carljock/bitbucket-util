@@ -1,0 +1,18 @@
+# OpenAPI Specification Patches
+#
+# This file contains patches to work around inconsistencies between the
+# Bitbucket Cloud OpenAPI specification and the actual API behavior.
+#
+# Each patch is applied to the OpenAPI spec before code generation.
+patches:
+  - name: "Fix comment_resolution required type field"
+    reason: |
+      The API returns empty objects {} without the 'type' field for comments
+      that don't have a resolution, but the OpenAPI spec declares 'type' as
+      required. This causes deserialization errors.
+
+      Issue: "error: parse error during list pull request comments: missing
+      field `type` at line 1 column 4643"
+    type: "make_field_optional"
+    schema: "comment_resolution"
+    field: "type"

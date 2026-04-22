@@ -14,8 +14,8 @@ use serde::{Deserialize, Serialize};
 /// CommentResolution : The resolution object for a Comment.
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CommentResolution {
-    #[serde(rename = "type")]
-    pub r#type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
     #[serde(rename = "user", skip_serializing_if = "Option::is_none")]
     pub user: Option<Box<models::Account>>,
     /// The ISO8601 timestamp the resolution was created.
@@ -25,9 +25,9 @@ pub struct CommentResolution {
 
 impl CommentResolution {
     /// The resolution object for a Comment.
-    pub fn new(r#type: String) -> CommentResolution {
+    pub fn new() -> CommentResolution {
         CommentResolution {
-            r#type,
+            r#type: None,
             user: None,
             created_on: None,
         }
