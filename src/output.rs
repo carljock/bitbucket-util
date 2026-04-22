@@ -1,6 +1,9 @@
 use std::io::{self, Write};
 
-use crate::model::{PullRequestJsonRow, PullRequestRow, RepoJsonRow, RepoRow};
+use crate::model::{
+    PullRequestCommentJsonRow, PullRequestCommentRow, PullRequestDetailedJsonRow,
+    PullRequestDetailedRow, PullRequestJsonRow, PullRequestRow, RepoJsonRow, RepoRow,
+};
 
 pub fn write_repositories<W: Write>(mut writer: W, repos: &[RepoRow]) -> io::Result<()> {
     for repo in repos {
@@ -46,6 +49,109 @@ pub fn write_pull_requests_json<W: Write>(
     let rows: Vec<PullRequestJsonRow> =
         pull_requests.iter().map(PullRequestJsonRow::from).collect();
     serde_json::to_writer(&mut writer, &rows)?;
+    writeln!(writer)?;
+    Ok(())
+}
+
+pub fn write_pull_request<W: Write>(
+    mut writer: W,
+    pr: &PullRequestDetailedRow,
+) -> io::Result<()> {
+    writeln!(
+        writer,
+        "PR #{}: {}",
+        pr.common.id,
+        pr.common.title.as_deref().unwrap_or("")
+    )?;
+    writeln!(writer, "State: {}", pr.common.state)?;
+    writeln!(
+        writer,
+        "Author: {}",
+        pr.common
+            .author_display_name
+            .as_deref()
+            .unwrap_or("unknown")
+    )?;
+    writeln!(
+        writer,
+        "Branch: {} -> {}",
+        pr.common.source_branch.as_deref().unwrap_or("unknown"),
+        pr.common
+            .destination_branch
+            .as_deref()
+            .unwrap_or("unknown")
+    )?;
+    if let Some(desc) = &pr.description {
+        writeln!(writer)?;
+        writeln!(writer, "{}", desc)?;
+    }
+    Ok(())
+}
+
+pub fn write_pull_request_json<W: Write>(
+    mut writer: W,
+    pr: &PullRequestDetailedRow,
+) -> io::Result<()> {
+    let row = PullRequestDetailedJsonRow::from(pr);
+    serde_json::to_writer(&mut writer, &row)?;
+    writeln!(writer)?;
+    Ok(())
+}
+
+pub fn write_pull_request_comments<W: Write>(
+    mut writer: W,
+    comments: &[PullRequestCommentRow],
+) -> io::Result<()> {
+    for comment in comments {
+        writeln!(
+            writer,
+            "[{}] {}",
+            comment.author_display_name.as_deref().unwrap_or("unknown"),
+            comment.content_raw.as_deref().unwrap_or("")
+        )?;
+        if let Some(inline) = &comment.inline {
+            writeln!(writer, "  File: {}", inline.path)?;
+            if let Some(line) = inline.to {
+                writeln!(writer, "  Line: {}", line)?;
+            }
+        }
+        writeln!(writer)?;
+    }
+    Ok(())
+}
+
+pub fn write_pull_request_comments_json<W: Write>(
+    mut writer: W,
+    comments: &[PullRequestCommentRow],
+) -> io::Result<()> {
+    let rows: Vec<PullRequestCommentJsonRow> =
+        comments.iter().map(PullRequestCommentJsonRow::from).collect();
+    serde_json::to_writer(&mut writer, &rows)?;
+    writeln!(writer)?;
+    Ok(())
+}
+
+pub fn write_pull_request_comment<W: Write>(
+    mut writer: W,
+    comment: &PullRequestCommentRow,
+) -> io::Result<()> {
+    writeln!(
+        writer,
+        "Comment created by {}",
+        comment.author_display_name.as_deref().unwrap_or("unknown")
+    )?;
+    if let Some(content) = &comment.content_raw {
+        writeln!(writer, "{}", content)?;
+    }
+    Ok(())
+}
+
+pub fn write_pull_request_comment_json<W: Write>(
+    mut writer: W,
+    comment: &PullRequestCommentRow,
+) -> io::Result<()> {
+    let row = PullRequestCommentJsonRow::from(comment);
+    serde_json::to_writer(&mut writer, &row)?;
     writeln!(writer)?;
     Ok(())
 }

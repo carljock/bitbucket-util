@@ -103,6 +103,87 @@ pub enum PrSubcommand {
         #[arg(long)]
         state: Option<PullRequestState>,
     },
+    /// Get detailed information about a pull request
+    Get {
+        /// Pull request ID
+        id: i32,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Get the diff of a pull request
+    Diff {
+        /// Pull request ID
+        id: i32,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// List comments on a pull request
+    Comments {
+        /// Pull request ID
+        id: i32,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Add a comment to a pull request
+    Comment {
+        /// Pull request ID
+        id: i32,
+        /// Comment content
+        content: String,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+        /// File path for inline comment
+        #[arg(long, requires = "line")]
+        file: Option<String>,
+        /// Line number for inline comment
+        #[arg(long, requires = "file")]
+        line: Option<i32>,
+    },
+    /// Approve a pull request
+    Approve {
+        /// Pull request ID
+        id: i32,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Remove approval from a pull request
+    Unapprove {
+        /// Pull request ID
+        id: i32,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Decline a pull request
+    Decline {
+        /// Pull request ID
+        id: i32,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Merge a pull request
+    Merge {
+        /// Pull request ID
+        id: i32,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+        /// Merge commit message
+        #[arg(long)]
+        message: Option<String>,
+        /// Close source branch after merge
+        #[arg(long)]
+        close_source_branch: bool,
+        /// Merge strategy (merge_commit, squash, fast_forward, etc.)
+        #[arg(long)]
+        strategy: Option<String>,
+    },
 }
 
 fn parse_repo_slug(value: &str) -> Result<(String, String), String> {

@@ -47,6 +47,48 @@ async fn run() -> Result<(), BbcliError> {
             cli::PrSubcommand::List { repo, state } => {
                 run_pull_requests_list(parsed.json, repo, state).await
             }
+            cli::PrSubcommand::Get { id, repo } => {
+                run_pull_request_get(parsed.json, id, repo).await
+            }
+            cli::PrSubcommand::Diff { id, repo } => {
+                run_pull_request_diff(parsed.json, id, repo).await
+            }
+            cli::PrSubcommand::Comments { id, repo } => {
+                run_pull_request_comments(parsed.json, id, repo).await
+            }
+            cli::PrSubcommand::Comment {
+                id,
+                content,
+                repo,
+                file,
+                line,
+            } => run_pull_request_comment(parsed.json, id, content, repo, file, line).await,
+            cli::PrSubcommand::Approve { id, repo } => {
+                run_pull_request_approve(parsed.json, id, repo).await
+            }
+            cli::PrSubcommand::Unapprove { id, repo } => {
+                run_pull_request_unapprove(parsed.json, id, repo).await
+            }
+            cli::PrSubcommand::Decline { id, repo } => {
+                run_pull_request_decline(parsed.json, id, repo).await
+            }
+            cli::PrSubcommand::Merge {
+                id,
+                repo,
+                message,
+                close_source_branch,
+                strategy,
+            } => {
+                run_pull_request_merge(
+                    parsed.json,
+                    id,
+                    repo,
+                    message,
+                    close_source_branch,
+                    strategy,
+                )
+                .await
+            }
         },
         cli::Command::Mcp => run_mcp(parsed.json).await,
     }
@@ -114,6 +156,209 @@ fn resolve_pr_repo_slug(repo: Option<(String, String)>) -> Result<(String, Strin
         Some(repo) => Ok(repo),
         None => git::detect_bitbucket_repo_slug_from_cwd(),
     }
+}
+
+async fn run_pull_request_get(
+    json: bool,
+    id: i32,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    let pr = client
+        .get_pull_request(&workspace_slug, &repo_slug, id)
+        .await?;
+
+    if json {
+        output::write_pull_request_json(std::io::stdout(), &pr)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pull_request(std::io::stdout(), &pr)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pull_request_diff(
+    json: bool,
+    id: i32,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    if json {
+        return Err(BbcliError::Usage {
+            message: "`--json` is not supported with `bb pr diff`".to_owned(),
+        });
+    }
+
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    let diff = client
+        .get_pull_request_diff(&workspace_slug, &repo_slug, id)
+        .await?;
+
+    print!("{}", diff);
+    Ok(())
+}
+
+async fn run_pull_request_comments(
+    json: bool,
+    id: i32,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    let comments = client
+        .list_pull_request_comments(&workspace_slug, &repo_slug, id)
+        .await?;
+
+    if json {
+        output::write_pull_request_comments_json(std::io::stdout(), comments.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pull_request_comments(std::io::stdout(), comments.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pull_request_comment(
+    json: bool,
+    id: i32,
+    content: String,
+    repo: Option<(String, String)>,
+    file: Option<String>,
+    line: Option<i32>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    let inline = match (file, line) {
+        (Some(path), Some(to)) => Some(model::PullRequestInlineComment {
+            path,
+            from: None,
+            to: Some(to),
+        }),
+        _ => None,
+    };
+
+    let comment = client
+        .create_pull_request_comment(&workspace_slug, &repo_slug, id, &content, inline)
+        .await?;
+
+    if json {
+        output::write_pull_request_comment_json(std::io::stdout(), &comment)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pull_request_comment(std::io::stdout(), &comment)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pull_request_approve(
+    json: bool,
+    id: i32,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    if json {
+        return Err(BbcliError::Usage {
+            message: "`--json` is not supported with `bb pr approve`".to_owned(),
+        });
+    }
+
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    client
+        .approve_pull_request(&workspace_slug, &repo_slug, id)
+        .await?;
+
+    println!("Pull request #{} approved.", id);
+    Ok(())
+}
+
+async fn run_pull_request_unapprove(
+    json: bool,
+    id: i32,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    if json {
+        return Err(BbcliError::Usage {
+            message: "`--json` is not supported with `bb pr unapprove`".to_owned(),
+        });
+    }
+
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    client
+        .unapprove_pull_request(&workspace_slug, &repo_slug, id)
+        .await?;
+
+    println!("Pull request #{} unapproved.", id);
+    Ok(())
+}
+
+async fn run_pull_request_decline(
+    json: bool,
+    id: i32,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    if json {
+        return Err(BbcliError::Usage {
+            message: "`--json` is not supported with `bb pr decline`".to_owned(),
+        });
+    }
+
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    client
+        .decline_pull_request(&workspace_slug, &repo_slug, id)
+        .await?;
+
+    println!("Pull request #{} declined.", id);
+    Ok(())
+}
+
+async fn run_pull_request_merge(
+    json: bool,
+    id: i32,
+    repo: Option<(String, String)>,
+    message: Option<String>,
+    close_source_branch: bool,
+    strategy: Option<String>,
+) -> Result<(), BbcliError> {
+    if json {
+        return Err(BbcliError::Usage {
+            message: "`--json` is not supported with `bb pr merge`".to_owned(),
+        });
+    }
+
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pr_repo_slug(repo)?;
+
+    client
+        .merge_pull_request(
+            &workspace_slug,
+            &repo_slug,
+            id,
+            message,
+            Some(close_source_branch),
+            strategy.as_deref(),
+        )
+        .await?;
+
+    println!("Pull request #{} merged.", id);
+    Ok(())
 }
 
 #[cfg(test)]
