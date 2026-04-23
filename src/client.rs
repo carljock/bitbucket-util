@@ -244,7 +244,6 @@ impl BitbucketClient {
         inline: Option<crate::model::PullRequestInlineComment>,
     ) -> Result<crate::model::PullRequestCommentRow, BbcliError> {
         let mut comment = models::PullrequestComment::new();
-        comment.r#type = Some("pullrequest_comment".to_owned());
         comment.content = Some(Box::new(models::CommentContent {
             raw: Some(content.to_owned()),
             ..Default::default()
