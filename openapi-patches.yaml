@@ -72,6 +72,63 @@ patches:
     schema: "pipeline_commit_target"
     baseSchema: "pipeline_target"
 
+  - name: "Fix pipeline_trigger required type field"
+    reason: |
+      Similar to comment_resolution and parent comments, the API returns
+      pipeline_trigger objects without the 'type' discriminator field. The
+      schema inherits from 'object' which declares 'type' as required, causing
+      deserialization errors when the API response lacks it.
+
+      Make the discriminator optional for pipeline_trigger and related types
+      so partial objects can be deserialized.
+    type: "make_field_optional"
+    schema: "pipeline_trigger"
+    field: "type"
+
+  - name: "Fix pipeline_state required type field"
+    reason: |
+      Similar issue to pipeline_trigger - the pipeline_state inherits from
+      object with a required type discriminator, but API responses may not
+      include it.
+    type: "make_field_optional"
+    schema: "pipeline_state"
+    field: "type"
+
+  - name: "Fix pipeline_state_in_progress_stage required type field"
+    reason: |
+      Nested state object that may lack the type discriminator.
+    type: "make_field_optional"
+    schema: "pipeline_state_in_progress_stage"
+    field: "type"
+
+  - name: "Fix pipeline_state_completed_result required type field"
+    reason: |
+      Nested state object that may lack the type discriminator.
+    type: "make_field_optional"
+    schema: "pipeline_state_completed_result"
+    field: "type"
+
+  - name: "Fix pipeline_error required type field"
+    reason: |
+      Nested error object that may lack the type discriminator.
+    type: "make_field_optional"
+    schema: "pipeline_error"
+    field: "type"
+
+  - name: "Fix repository required type field"
+    reason: |
+      Pipeline.repository field may return objects without type discriminator.
+    type: "make_field_optional"
+    schema: "repository"
+    field: "type"
+
+  - name: "Fix account required type field"
+    reason: |
+      Pipeline.creator field (account object) may lack type discriminator.
+    type: "make_field_optional"
+    schema: "account"
+    field: "type"
+
   - name: "Fix Pipeline.target to use concrete types"
     reason: |
       The Pipeline schema's target field currently references the empty
