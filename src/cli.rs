@@ -44,6 +44,31 @@ impl PullRequestState {
     }
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum, Serialize, Deserialize, JsonSchema)]
+#[clap(rename_all = "lower")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum PipelineStatus {
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
+    Stopped,
+    Error,
+}
+
+impl PipelineStatus {
+    pub fn as_api_value(self) -> &'static str {
+        match self {
+            PipelineStatus::Pending => "PENDING",
+            PipelineStatus::InProgress => "IN_PROGRESS",
+            PipelineStatus::Completed => "COMPLETED",
+            PipelineStatus::Failed => "FAILED",
+            PipelineStatus::Stopped => "STOPPED",
+            PipelineStatus::Error => "ERROR",
+        }
+    }
+}
+
 #[derive(Debug, Parser, Clone, Eq, PartialEq)]
 #[command(name = "bb")]
 #[command(version)]
@@ -63,6 +88,8 @@ pub enum Command {
     Repo(RepoArgs),
     /// Manage pull requests
     Pr(PrArgs),
+    /// Manage pipelines
+    Pipeline(PipelineArgs),
     /// Start an MCP server over stdio
     Mcp,
 }
@@ -184,6 +211,116 @@ pub enum PrSubcommand {
         #[arg(long)]
         strategy: Option<String>,
     },
+}
+
+#[derive(Debug, Args, Clone, Eq, PartialEq)]
+pub struct PipelineArgs {
+    #[command(subcommand)]
+    pub command: PipelineSubcommand,
+}
+
+#[derive(Debug, Subcommand, Clone, Eq, PartialEq)]
+pub enum PipelineSubcommand {
+    /// List pipelines for a repository
+    List {
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+        /// Filter by pipeline status
+        #[arg(long)]
+        status: Option<PipelineStatus>,
+        /// Filter by target branch
+        #[arg(long)]
+        branch: Option<String>,
+        /// List all pipelines (default: limit to 20)
+        #[arg(long)]
+        all: bool,
+    },
+    /// Get details for a specific pipeline
+    Get {
+        /// Pipeline UUID or build number
+        pipeline_id: String,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Trigger a new pipeline
+    Trigger {
+        /// Branch or tag name to trigger on
+        ref_name: String,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+        /// Reference type (branch, tag, named_branch, bookmark)
+        #[arg(long, default_value = "branch")]
+        ref_type: String,
+        /// Specific commit hash (optional)
+        #[arg(long)]
+        commit: Option<String>,
+        /// Custom pipeline selector type (custom, branches, tags, etc.)
+        #[arg(long)]
+        selector_type: Option<String>,
+        /// Custom pipeline selector pattern
+        #[arg(long)]
+        selector_pattern: Option<String>,
+        /// Variables in key=value format (can be repeated)
+        #[arg(long = "var")]
+        variables: Vec<String>,
+        /// Secured variables in key=value format (can be repeated)
+        #[arg(long = "secure-var")]
+        secure_variables: Vec<String>,
+    },
+    /// Stop a running pipeline
+    Stop {
+        /// Pipeline UUID or build number
+        pipeline_id: String,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// List steps for a pipeline
+    Steps {
+        /// Pipeline UUID or build number
+        pipeline_id: String,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Get details for a specific step
+    Step {
+        /// Pipeline UUID or build number
+        pipeline_id: String,
+        /// Step UUID
+        step_id: String,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+    /// Get logs for a pipeline step
+    Logs {
+        /// Pipeline UUID or build number
+        pipeline_id: String,
+        /// Step UUID
+        step_id: String,
+        /// Repository in <workspace>/<repo> format
+        #[arg(long, value_parser = parse_repo_slug)]
+        repo: Option<(String, String)>,
+    },
+}
+
+pub fn parse_pipeline_variables(
+    vars: &[String],
+    secured: bool,
+) -> Result<Vec<(String, String, bool)>, String> {
+    vars.iter()
+        .map(|s| {
+            let parts: Vec<&str> = s.splitn(2, '=').collect();
+            if parts.len() != 2 {
+                return Err(format!("Invalid variable format: '{}'. Expected key=value", s));
+            }
+            Ok((parts[0].to_string(), parts[1].to_string(), secured))
+        })
+        .collect()
 }
 
 fn parse_repo_slug(value: &str) -> Result<(String, String), String> {

@@ -193,6 +193,127 @@ impl From<&PullRequestCommentRow> for PullRequestCommentJsonRow {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PipelineRow {
+    pub uuid: String,
+    pub build_number: i32,
+    pub state: String,
+    pub creator: Option<String>,
+    pub created_on: Option<String>,
+    pub completed_on: Option<String>,
+    pub target_ref_name: Option<String>,
+    pub target_ref_type: Option<String>,
+    pub web_url: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PipelineDetailedRow {
+    pub uuid: String,
+    pub build_number: i32,
+    pub state: String,
+    pub creator: Option<String>,
+    pub created_on: Option<String>,
+    pub completed_on: Option<String>,
+    pub target_ref_name: Option<String>,
+    pub target_ref_type: Option<String>,
+    pub web_url: String,
+    pub trigger_type: Option<String>,
+    pub build_seconds_used: Option<i32>,
+    pub commit_hash: Option<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PipelineStepRow {
+    pub uuid: String,
+    pub state: String,
+    pub started_on: Option<String>,
+    pub completed_on: Option<String>,
+    pub image_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, JsonSchema)]
+pub struct PipelineJsonRow {
+    pub uuid: String,
+    pub build_number: i32,
+    pub state: String,
+    pub creator: Option<String>,
+    pub created_on: Option<String>,
+    pub web_url: String,
+    pub target_ref_name: Option<String>,
+    pub target_ref_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, JsonSchema)]
+pub struct PipelineDetailedJsonRow {
+    pub uuid: String,
+    pub build_number: i32,
+    pub state: String,
+    pub creator: Option<String>,
+    pub created_on: Option<String>,
+    pub completed_on: Option<String>,
+    pub web_url: String,
+    pub target_ref_name: Option<String>,
+    pub target_ref_type: Option<String>,
+    pub trigger_type: Option<String>,
+    pub build_seconds_used: Option<i32>,
+    pub commit_hash: Option<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, JsonSchema)]
+pub struct PipelineStepJsonRow {
+    pub uuid: String,
+    pub state: String,
+    pub started_on: Option<String>,
+    pub completed_on: Option<String>,
+    pub image_name: Option<String>,
+}
+
+impl From<&PipelineRow> for PipelineJsonRow {
+    fn from(value: &PipelineRow) -> Self {
+        Self {
+            uuid: value.uuid.clone(),
+            build_number: value.build_number,
+            state: value.state.clone(),
+            creator: value.creator.clone(),
+            created_on: value.created_on.clone(),
+            web_url: value.web_url.clone(),
+            target_ref_name: value.target_ref_name.clone(),
+            target_ref_type: value.target_ref_type.clone(),
+        }
+    }
+}
+
+impl From<&PipelineDetailedRow> for PipelineDetailedJsonRow {
+    fn from(value: &PipelineDetailedRow) -> Self {
+        Self {
+            uuid: value.uuid.clone(),
+            build_number: value.build_number,
+            state: value.state.clone(),
+            creator: value.creator.clone(),
+            created_on: value.created_on.clone(),
+            completed_on: value.completed_on.clone(),
+            web_url: value.web_url.clone(),
+            target_ref_name: value.target_ref_name.clone(),
+            target_ref_type: value.target_ref_type.clone(),
+            trigger_type: value.trigger_type.clone(),
+            build_seconds_used: value.build_seconds_used,
+            commit_hash: value.commit_hash.clone(),
+        }
+    }
+}
+
+impl From<&PipelineStepRow> for PipelineStepJsonRow {
+    fn from(value: &PipelineStepRow) -> Self {
+        Self {
+            uuid: value.uuid.clone(),
+            state: value.state.clone(),
+            started_on: value.started_on.clone(),
+            completed_on: value.completed_on.clone(),
+            image_name: value.image_name.clone(),
+        }
+    }
+}
+
 pub fn normalize_repositories(mut repos: Vec<RepoRow>) -> Vec<RepoRow> {
     repos.sort_by(|a, b| {
         a.workspace_slug

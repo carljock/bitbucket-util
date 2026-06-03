@@ -90,6 +90,57 @@ async fn run() -> Result<(), BbcliError> {
                 .await
             }
         },
+        cli::Command::Pipeline(pipeline_args) => match pipeline_args.command {
+            cli::PipelineSubcommand::List { repo, status, branch, all } => {
+                run_pipeline_list(parsed.json, repo, status, branch, all).await
+            }
+            cli::PipelineSubcommand::Get { pipeline_id, repo } => {
+                run_pipeline_get(parsed.json, pipeline_id, repo).await
+            }
+            cli::PipelineSubcommand::Trigger {
+                ref_name,
+                repo,
+                ref_type,
+                commit,
+                selector_type,
+                selector_pattern,
+                variables,
+                secure_variables,
+            } => {
+                run_pipeline_trigger(
+                    parsed.json,
+                    ref_name,
+                    repo,
+                    ref_type,
+                    commit,
+                    selector_type,
+                    selector_pattern,
+                    variables,
+                    secure_variables,
+                )
+                .await
+            }
+            cli::PipelineSubcommand::Stop { pipeline_id, repo } => {
+                run_pipeline_stop(parsed.json, pipeline_id, repo).await
+            }
+            cli::PipelineSubcommand::Steps { pipeline_id, repo } => {
+                run_pipeline_steps(parsed.json, pipeline_id, repo).await
+            }
+            cli::PipelineSubcommand::Step {
+                pipeline_id,
+                step_id,
+                repo,
+            } => {
+                run_pipeline_step(parsed.json, pipeline_id, step_id, repo).await
+            }
+            cli::PipelineSubcommand::Logs {
+                pipeline_id,
+                step_id,
+                repo,
+            } => {
+                run_pipeline_logs(parsed.json, pipeline_id, step_id, repo).await
+            }
+        },
         cli::Command::Mcp => run_mcp(parsed.json).await,
     }
 }
@@ -359,6 +410,210 @@ async fn run_pull_request_merge(
 
     println!("Pull request #{} merged.", id);
     Ok(())
+}
+
+fn resolve_pipeline_repo_slug(repo: Option<(String, String)>) -> Result<(String, String), BbcliError> {
+    match repo {
+        Some(repo) => Ok(repo),
+        None => git::detect_bitbucket_repo_slug_from_cwd(),
+    }
+}
+
+async fn run_pipeline_list(
+    json: bool,
+    repo: Option<(String, String)>,
+    status: Option<cli::PipelineStatus>,
+    branch: Option<String>,
+    all: bool,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pipeline_repo_slug(repo)?;
+
+    let limit = if all { None } else { Some(20) };
+
+    let pipelines = client
+        .list_pipelines(
+            &workspace_slug,
+            &repo_slug,
+            status.map(|s| s.as_api_value()),
+            branch.as_deref(),
+            None,
+            limit,
+        )
+        .await?;
+
+    if json {
+        output::write_pipelines_json(std::io::stdout(), pipelines.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pipelines(std::io::stdout(), pipelines.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pipeline_get(
+    json: bool,
+    pipeline_id: String,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pipeline_repo_slug(repo)?;
+
+    let pipeline = client
+        .get_pipeline(&workspace_slug, &repo_slug, &pipeline_id)
+        .await?;
+
+    if json {
+        output::write_pipeline_json(std::io::stdout(), &pipeline)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pipeline(std::io::stdout(), &pipeline)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pipeline_trigger(
+    json: bool,
+    ref_name: String,
+    repo: Option<(String, String)>,
+    ref_type: String,
+    commit: Option<String>,
+    selector_type: Option<String>,
+    selector_pattern: Option<String>,
+    variables: Vec<String>,
+    secure_variables: Vec<String>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pipeline_repo_slug(repo)?;
+
+    let mut all_vars = cli::parse_pipeline_variables(&variables, false)
+        .map_err(|e| BbcliError::Usage { message: e })?;
+    all_vars.extend(
+        cli::parse_pipeline_variables(&secure_variables, true)
+            .map_err(|e| BbcliError::Usage { message: e })?,
+    );
+    let vars = if all_vars.is_empty() { None } else { Some(all_vars) };
+
+    let pipeline = client
+        .trigger_pipeline(
+            &workspace_slug,
+            &repo_slug,
+            &ref_type,
+            &ref_name,
+            commit.as_deref(),
+            selector_type.as_deref(),
+            selector_pattern.as_deref(),
+            vars,
+        )
+        .await?;
+
+    if json {
+        output::write_pipeline_json(std::io::stdout(), &pipeline)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pipeline(std::io::stdout(), &pipeline)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pipeline_stop(
+    json: bool,
+    pipeline_id: String,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    if json {
+        return Err(BbcliError::Usage {
+            message: "`--json` is not supported with `bb pipeline stop`".to_owned(),
+        });
+    }
+
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pipeline_repo_slug(repo)?;
+
+    client
+        .stop_pipeline(&workspace_slug, &repo_slug, &pipeline_id)
+        .await?;
+
+    println!("Pipeline {} stopped.", pipeline_id);
+    Ok(())
+}
+
+async fn run_pipeline_steps(
+    json: bool,
+    pipeline_id: String,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pipeline_repo_slug(repo)?;
+
+    let steps = client
+        .list_pipeline_steps(&workspace_slug, &repo_slug, &pipeline_id)
+        .await?;
+
+    if json {
+        output::write_pipeline_steps_json(std::io::stdout(), steps.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pipeline_steps(std::io::stdout(), steps.as_slice())
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pipeline_step(
+    json: bool,
+    pipeline_id: String,
+    step_id: String,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pipeline_repo_slug(repo)?;
+
+    let step = client
+        .get_pipeline_step(&workspace_slug, &repo_slug, &pipeline_id, &step_id)
+        .await?;
+
+    if json {
+        output::write_pipeline_step_json(std::io::stdout(), &step)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    } else {
+        output::write_pipeline_step(std::io::stdout(), &step)
+            .map_err(|source| BbcliError::with_io("writing CLI output", source))
+    }
+}
+
+async fn run_pipeline_logs(
+    json: bool,
+    pipeline_id: String,
+    step_id: String,
+    repo: Option<(String, String)>,
+) -> Result<(), BbcliError> {
+    let credentials = load_credentials(BITBUCKET_MACHINE)?;
+    let client = BitbucketClient::from_credentials(credentials.login, credentials.token);
+    let (workspace_slug, repo_slug) = resolve_pipeline_repo_slug(repo)?;
+
+    let logs = client
+        .get_pipeline_step_log(&workspace_slug, &repo_slug, &pipeline_id, &step_id)
+        .await?;
+
+    if json {
+        let log_obj = serde_json::json!({ "logs": logs });
+        let json_str = serde_json::to_string(&log_obj)
+            .map_err(|e| BbcliError::Parse {
+                context: "serialize logs to json",
+                message: e.to_string(),
+            })?;
+        println!("{}", json_str);
+        Ok(())
+    } else {
+        print!("{}", logs);
+        Ok(())
+    }
 }
 
 #[cfg(test)]

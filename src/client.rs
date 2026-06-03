@@ -360,6 +360,265 @@ impl BitbucketClient {
 
         Ok(())
     }
+
+    pub async fn list_pipelines(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        status: Option<&str>,
+        target_branch: Option<&str>,
+        creator_uuid: Option<&str>,
+        limit: Option<i32>,
+    ) -> Result<Vec<crate::model::PipelineRow>, BbcliError> {
+        let limit = limit.unwrap_or(20);
+        let mut page = apis::pipelines_api::get_pipelines_for_repository(
+            &self.config,
+            workspace_slug,
+            repo_slug,
+            creator_uuid,
+            None,
+            None,
+            target_branch,
+            None,
+            None,
+            None,
+            None,
+            None,
+            status,
+            None,
+            None,
+            Some(limit),
+        )
+        .await
+        .map_err(|err| map_sdk_error("list pipelines", err))?;
+
+        let mut pipelines = pipeline_rows_from_values(page.values.take().unwrap_or_default());
+        let mut next = page.next.take();
+
+        while let Some(next_url) = next {
+            if pipelines.len() >= limit as usize {
+                break;
+            }
+
+            let mut next_page: models::PaginatedPipelines = self
+                .fetch_page(next_url.as_str(), "list pipelines pagination")
+                .await?;
+
+            pipelines.extend(pipeline_rows_from_values(
+                next_page.values.take().unwrap_or_default(),
+            ));
+            next = next_page.next.take();
+        }
+
+        pipelines.truncate(limit as usize);
+        Ok(pipelines)
+    }
+
+    pub async fn get_pipeline(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        pipeline_uuid: &str,
+    ) -> Result<crate::model::PipelineDetailedRow, BbcliError> {
+        let pipeline = apis::pipelines_api::get_pipeline_for_repository(
+            &self.config,
+            workspace_slug,
+            repo_slug,
+            pipeline_uuid,
+        )
+        .await
+        .map_err(|err| map_sdk_error("get pipeline", err))?;
+
+        Ok(pipeline_to_detailed_row(pipeline))
+    }
+
+    pub async fn trigger_pipeline(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        ref_type: &str,
+        ref_name: &str,
+        commit_hash: Option<&str>,
+        selector_type: Option<&str>,
+        selector_pattern: Option<&str>,
+        variables: Option<Vec<(String, String, bool)>>,
+    ) -> Result<crate::model::PipelineDetailedRow, BbcliError> {
+        // Build the complete request as JSON to preserve all fields
+        let mut target_json = serde_json::json!({
+            "type": "pipeline_ref_target",
+            "ref_type": ref_type,
+            "ref_name": ref_name,
+        });
+
+        if let Some(commit) = commit_hash {
+            target_json["commit"] = serde_json::json!({
+                "type": "commit",
+                "hash": commit,
+            });
+        }
+
+        if selector_type.is_some() || selector_pattern.is_some() {
+            let mut selector_obj = serde_json::json!({});
+            if let Some(sel_type) = selector_type {
+                selector_obj["type"] = serde_json::Value::String(sel_type.to_string());
+            }
+            if let Some(pattern) = selector_pattern {
+                selector_obj["pattern"] = serde_json::Value::String(pattern.to_string());
+            }
+            target_json["selector"] = selector_obj;
+        }
+
+        let mut pipeline_json = serde_json::json!({
+            "type": "pipeline",
+            "target": target_json,
+        });
+
+        if let Some(vars) = variables {
+            let vars_json: Vec<_> = vars.iter()
+                .map(|(key, value, secured)| {
+                    serde_json::json!({
+                        "type": "pipeline_variable",
+                        "key": key,
+                        "value": value,
+                        "secured": secured,
+                    })
+                })
+                .collect();
+            pipeline_json["variables"] = serde_json::Value::Array(vars_json);
+        }
+
+        eprintln!("DEBUG: Sending pipeline trigger request:\n{}", serde_json::to_string_pretty(&pipeline_json).unwrap_or_default());
+
+        // Parse back to Pipeline model for the API call
+        let pipeline: models::Pipeline = serde_json::from_value(pipeline_json.clone())
+            .map_err(|e| BbcliError::Parse {
+                context: "parse trigger pipeline json",
+                message: e.to_string(),
+            })?;
+
+        let result = apis::pipelines_api::create_pipeline_for_repository(
+            &self.config,
+            workspace_slug,
+            repo_slug,
+            pipeline,
+        )
+        .await
+        .map_err(|err| map_sdk_error("trigger pipeline", err))?;
+
+        Ok(pipeline_to_detailed_row(result))
+    }
+
+    pub async fn stop_pipeline(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        pipeline_uuid: &str,
+    ) -> Result<(), BbcliError> {
+        apis::pipelines_api::stop_pipeline(
+            &self.config,
+            workspace_slug,
+            repo_slug,
+            pipeline_uuid,
+        )
+        .await
+        .map_err(|err| map_sdk_error("stop pipeline", err))?;
+
+        Ok(())
+    }
+
+    pub async fn list_pipeline_steps(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        pipeline_uuid: &str,
+    ) -> Result<Vec<crate::model::PipelineStepRow>, BbcliError> {
+        let mut page = apis::pipelines_api::get_pipeline_steps_for_repository(
+            &self.config,
+            workspace_slug,
+            repo_slug,
+            pipeline_uuid,
+        )
+        .await
+        .map_err(|err| map_sdk_error("list pipeline steps", err))?;
+
+        let mut steps = pipeline_step_rows_from_values(page.values.take().unwrap_or_default());
+        let mut next = page.next.take();
+
+        while let Some(next_url) = next {
+            let mut next_page: models::PaginatedPipelineSteps = self
+                .fetch_page(next_url.as_str(), "list pipeline steps pagination")
+                .await?;
+
+            steps.extend(pipeline_step_rows_from_values(
+                next_page.values.take().unwrap_or_default(),
+            ));
+            next = next_page.next.take();
+        }
+
+        Ok(steps)
+    }
+
+    pub async fn get_pipeline_step(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        pipeline_uuid: &str,
+        step_uuid: &str,
+    ) -> Result<crate::model::PipelineStepRow, BbcliError> {
+        let step = apis::pipelines_api::get_pipeline_step_for_repository(
+            &self.config,
+            workspace_slug,
+            repo_slug,
+            pipeline_uuid,
+            step_uuid,
+        )
+        .await
+        .map_err(|err| map_sdk_error("get pipeline step", err))?;
+
+        Ok(pipeline_step_to_row(step))
+    }
+
+    pub async fn get_pipeline_step_log(
+        &self,
+        workspace_slug: &str,
+        repo_slug: &str,
+        pipeline_uuid: &str,
+        step_uuid: &str,
+    ) -> Result<String, BbcliError> {
+        let mut request = self.config.client.get(format!(
+            "{}/repositories/{workspace_slug}/{repo_slug}/pipelines/{pipeline_uuid}/steps/{step_uuid}/log",
+            self.config.base_path
+        ));
+
+        if let Some(user_agent) = &self.config.user_agent {
+            request = request.header("User-Agent", user_agent.clone());
+        }
+
+        if let Some((username, password)) = &self.config.basic_auth {
+            request = request.basic_auth(username, password.clone());
+        }
+
+        let response = request.send().await.map_err(|err| BbcliError::Network {
+            context: "get pipeline step log",
+            message: err.to_string(),
+        })?;
+
+        let status = response.status();
+        let body = response.text().await.map_err(|err| BbcliError::Network {
+            context: "get pipeline step log",
+            message: err.to_string(),
+        })?;
+
+        if !status.is_success() {
+            return Err(BbcliError::Api {
+                context: "get pipeline step log",
+                status: Some(status.as_u16()),
+                message: compact_api_message(body.as_str()),
+            });
+        }
+
+        Ok(body)
+    }
 }
 
 fn pull_request_comment_rows_from_values(
@@ -593,6 +852,166 @@ fn extract_clone_urls(
     }
 
     (clone_https, clone_ssh)
+}
+
+fn pipeline_to_row(pipeline: models::Pipeline) -> Option<crate::model::PipelineRow> {
+    let uuid = pipeline.uuid?;
+    let build_number = pipeline.build_number?;
+
+    let state = pipeline
+        .state
+        .and_then(|s| s.r#type)
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let creator = pipeline.creator.and_then(|a| a.display_name);
+
+    let (target_ref_name, target_ref_type) = pipeline
+        .target
+        .as_ref()
+        .and_then(|target| {
+            if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
+                serde_json::to_value(target).ok()?,
+            ) {
+                Some((
+                    pipeline_ref_target.ref_name,
+                    pipeline_ref_target.ref_type.map(|rt| match rt {
+                        models::pipeline_ref_target::RefType::Branch => "branch",
+                        models::pipeline_ref_target::RefType::Tag => "tag",
+                        models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
+                        models::pipeline_ref_target::RefType::Bookmark => "bookmark",
+                    }),
+                ))
+            } else {
+                None
+            }
+        })
+        .unwrap_or((None, None));
+
+    let web_url = pipeline
+        .links
+        .and_then(|links| links.param_self)
+        .and_then(|link| link.href)
+        .unwrap_or_default();
+
+    Some(crate::model::PipelineRow {
+        uuid,
+        build_number,
+        state,
+        creator,
+        created_on: pipeline.created_on,
+        completed_on: pipeline.completed_on,
+        target_ref_name,
+        target_ref_type: target_ref_type.map(|s| s.to_string()),
+        web_url,
+    })
+}
+
+fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::PipelineDetailedRow {
+    let uuid = pipeline.uuid.clone().unwrap_or_default();
+    let build_number = pipeline.build_number.unwrap_or_default();
+
+    let state = pipeline
+        .state
+        .as_ref()
+        .and_then(|s| s.r#type.as_ref())
+        .cloned()
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let creator = pipeline.creator.as_ref().and_then(|a| a.display_name.clone());
+
+    let (target_ref_name, target_ref_type) = pipeline
+        .target
+        .as_ref()
+        .and_then(|target| {
+            if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
+                serde_json::to_value(target).ok()?,
+            ) {
+                Some((
+                    pipeline_ref_target.ref_name,
+                    pipeline_ref_target.ref_type.map(|rt| match rt {
+                        models::pipeline_ref_target::RefType::Branch => "branch",
+                        models::pipeline_ref_target::RefType::Tag => "tag",
+                        models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
+                        models::pipeline_ref_target::RefType::Bookmark => "bookmark",
+                    }),
+                ))
+            } else {
+                None
+            }
+        })
+        .unwrap_or((None, None));
+
+    let web_url = pipeline
+        .links
+        .as_ref()
+        .and_then(|links| links.param_self.as_ref())
+        .and_then(|link| link.href.as_ref())
+        .cloned()
+        .unwrap_or_default();
+
+    let trigger_type = pipeline.trigger.as_ref().and_then(|t| t.r#type.clone());
+
+    let commit_hash = pipeline
+        .target
+        .as_ref()
+        .and_then(|target| {
+            if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
+                serde_json::to_value(target).ok()?,
+            ) {
+                pipeline_ref_target
+                    .commit
+                    .and_then(|commit| commit.hash)
+            } else {
+                None
+            }
+        });
+
+    crate::model::PipelineDetailedRow {
+        uuid,
+        build_number,
+        state,
+        creator,
+        created_on: pipeline.created_on,
+        completed_on: pipeline.completed_on,
+        target_ref_name,
+        target_ref_type: target_ref_type.map(|s| s.to_string()),
+        web_url,
+        trigger_type,
+        build_seconds_used: pipeline.build_seconds_used,
+        commit_hash,
+    }
+}
+
+fn pipeline_rows_from_values(values: Vec<models::Pipeline>) -> Vec<crate::model::PipelineRow> {
+    values.into_iter().filter_map(pipeline_to_row).collect()
+}
+
+fn pipeline_step_to_row(step: models::PipelineStep) -> crate::model::PipelineStepRow {
+    let uuid = step.uuid.unwrap_or_default();
+    let state = step
+        .state
+        .as_ref()
+        .and_then(|s| s.r#type.as_ref())
+        .cloned()
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let image_name = step
+        .image
+        .as_ref()
+        .and_then(|img| img.name.as_ref())
+        .cloned();
+
+    crate::model::PipelineStepRow {
+        uuid,
+        state,
+        started_on: step.started_on,
+        completed_on: step.completed_on,
+        image_name,
+    }
+}
+
+fn pipeline_step_rows_from_values(values: Vec<models::PipelineStep>) -> Vec<crate::model::PipelineStepRow> {
+    values.into_iter().map(pipeline_step_to_row).collect()
 }
 
 fn derive_repo_slug(

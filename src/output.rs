@@ -1,7 +1,8 @@
 use std::io::{self, Write};
 
 use crate::model::{
-    PullRequestCommentJsonRow, PullRequestCommentRow, PullRequestDetailedJsonRow,
+    PipelineDetailedJsonRow, PipelineDetailedRow, PipelineJsonRow, PipelineRow, PipelineStepJsonRow,
+    PipelineStepRow, PullRequestCommentJsonRow, PullRequestCommentRow, PullRequestDetailedJsonRow,
     PullRequestDetailedRow, PullRequestJsonRow, PullRequestRow, RepoJsonRow, RepoRow,
 };
 
@@ -158,6 +159,165 @@ pub fn write_pull_request_comment_json<W: Write>(
 
 fn osc8_link(label: &str, url: &str) -> String {
     format!("\u{1b}]8;;{url}\u{1b}\\{label}\u{1b}]8;;\u{1b}\\")
+}
+
+pub fn write_pipelines<W: Write>(mut writer: W, pipelines: &[PipelineRow]) -> io::Result<()> {
+    for p in pipelines {
+        let state_indicator = match p.state.as_str() {
+            "COMPLETED" => "✓",
+            "FAILED" => "✗",
+            "IN_PROGRESS" => "⋯",
+            "STOPPED" => "⊗",
+            _ => "?",
+        };
+
+        let ref_display = p
+            .target_ref_name
+            .as_ref()
+            .map(|r| format!(" {}", r))
+            .unwrap_or_default();
+
+        let label = format!(
+            "{} #{} {}{}",
+            state_indicator, p.build_number, p.state, ref_display
+        );
+
+        if !p.web_url.is_empty() {
+            writeln!(writer, "{}", osc8_link(label.as_str(), &p.web_url))?;
+        } else {
+            writeln!(writer, "{label}")?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn write_pipelines_json<W: Write>(mut writer: W, pipelines: &[PipelineRow]) -> io::Result<()> {
+    let rows: Vec<PipelineJsonRow> = pipelines.iter().map(PipelineJsonRow::from).collect();
+    serde_json::to_writer(&mut writer, &rows)?;
+    writeln!(writer)?;
+    Ok(())
+}
+
+pub fn write_pipeline<W: Write>(mut writer: W, pipeline: &PipelineDetailedRow) -> io::Result<()> {
+    writeln!(writer, "Pipeline: #{}", pipeline.build_number)?;
+    writeln!(writer, "UUID:     {}", pipeline.uuid)?;
+    writeln!(writer, "State:    {}", pipeline.state)?;
+
+    if let Some(ref_name) = &pipeline.target_ref_name {
+        let ref_type = pipeline
+            .target_ref_type
+            .as_deref()
+            .unwrap_or("unknown");
+        writeln!(writer, "Ref:      {} ({})", ref_name, ref_type)?;
+    }
+
+    if let Some(creator) = &pipeline.creator {
+        writeln!(writer, "Creator:  {}", creator)?;
+    }
+
+    if let Some(trigger) = &pipeline.trigger_type {
+        writeln!(writer, "Trigger:  {}", trigger)?;
+    }
+
+    if let Some(created) = &pipeline.created_on {
+        writeln!(writer, "Created:  {}", created)?;
+    }
+
+    if let Some(completed) = &pipeline.completed_on {
+        writeln!(writer, "Completed: {}", completed)?;
+    }
+
+    if let Some(seconds) = pipeline.build_seconds_used {
+        writeln!(writer, "Duration: {}s", seconds)?;
+    }
+
+    writeln!(writer, "URL:      {}", pipeline.web_url)?;
+
+    Ok(())
+}
+
+pub fn write_pipeline_json<W: Write>(
+    mut writer: W,
+    pipeline: &PipelineDetailedRow,
+) -> io::Result<()> {
+    let row = PipelineDetailedJsonRow::from(pipeline);
+    serde_json::to_writer(&mut writer, &row)?;
+    writeln!(writer)?;
+    Ok(())
+}
+
+pub fn write_pipeline_steps<W: Write>(
+    mut writer: W,
+    steps: &[PipelineStepRow],
+) -> io::Result<()> {
+    for (idx, step) in steps.iter().enumerate() {
+        let state_indicator = match step.state.as_str() {
+            "COMPLETED" => "✓",
+            "FAILED" => "✗",
+            "IN_PROGRESS" => "⋯",
+            _ => "?",
+        };
+
+        let image_display = step
+            .image_name
+            .as_ref()
+            .map(|i| format!(" [{}]", i))
+            .unwrap_or_default();
+
+        writeln!(
+            writer,
+            "{} Step {} {}{}",
+            state_indicator,
+            idx + 1,
+            step.state,
+            image_display
+        )?;
+    }
+
+    Ok(())
+}
+
+pub fn write_pipeline_steps_json<W: Write>(
+    mut writer: W,
+    steps: &[PipelineStepRow],
+) -> io::Result<()> {
+    let rows: Vec<PipelineStepJsonRow> = steps.iter().map(PipelineStepJsonRow::from).collect();
+    serde_json::to_writer(&mut writer, &rows)?;
+    writeln!(writer)?;
+    Ok(())
+}
+
+pub fn write_pipeline_step<W: Write>(
+    mut writer: W,
+    step: &PipelineStepRow,
+) -> io::Result<()> {
+    writeln!(writer, "Step:     {}", step.uuid)?;
+    writeln!(writer, "State:    {}", step.state)?;
+
+    if let Some(image) = &step.image_name {
+        writeln!(writer, "Image:    {}", image)?;
+    }
+
+    if let Some(started) = &step.started_on {
+        writeln!(writer, "Started:  {}", started)?;
+    }
+
+    if let Some(completed) = &step.completed_on {
+        writeln!(writer, "Completed: {}", completed)?;
+    }
+
+    Ok(())
+}
+
+pub fn write_pipeline_step_json<W: Write>(
+    mut writer: W,
+    step: &PipelineStepRow,
+) -> io::Result<()> {
+    let row = PipelineStepJsonRow::from(step);
+    serde_json::to_writer(&mut writer, &row)?;
+    writeln!(writer)?;
+    Ok(())
 }
 
 #[cfg(test)]

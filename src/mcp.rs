@@ -19,7 +19,8 @@ use crate::client::BitbucketClient;
 use crate::error::BbcliError;
 use crate::git;
 use crate::model::{
-    PullRequestCommentJsonRow, PullRequestDetailedJsonRow, PullRequestJsonRow, RepoJsonRow,
+    PipelineDetailedJsonRow, PipelineJsonRow, PipelineStepJsonRow, PullRequestCommentJsonRow,
+    PullRequestDetailedJsonRow, PullRequestJsonRow, RepoJsonRow,
 };
 
 const BITBUCKET_MACHINE: &str = "api.bitbucket.org";
@@ -45,7 +46,7 @@ impl ServerHandler for BbMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::from_build_env())
-            .with_instructions("Bitbucket MCP server. Use bitbucket.list_repositories to discover repositories. Use bitbucket.list_pull_requests with explicit workspace_slug and repo_slug when known; otherwise it will resolve the repository from MCP roots.")
+            .with_instructions("Bitbucket MCP server providing repository, pull request, and pipeline management. Use bitbucket.list_repositories to discover repositories. For pull requests and pipelines, provide explicit workspace_slug and repo_slug, or the server will resolve the repository from MCP roots. Pipeline tools include: list, get details, trigger (with variables and custom selectors), stop, list steps, get step details, and fetch logs.")
     }
 }
 
@@ -274,6 +275,189 @@ impl BbMcpServer {
 
         Ok(format!("Pull request #{} merged.", params.pull_request_id))
     }
+
+    #[tool(
+        name = "bitbucket.list_pipelines",
+        description = "List pipelines for a repository with optional filtering. When workspace_slug and repo_slug are omitted, the server resolves the repository from the client's MCP roots.",
+        annotations(read_only_hint = true)
+    )]
+    async fn list_pipelines(
+        &self,
+        Parameters(params): Parameters<ListPipelinesParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<ListPipelinesResult>, McpError> {
+        let (workspace_slug, repo_slug) =
+            resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let limit = if params.all.unwrap_or(false) { None } else { Some(20) };
+
+        let pipelines = self
+            .client()
+            .list_pipelines(
+                &workspace_slug,
+                &repo_slug,
+                params.status.as_deref(),
+                params.target_branch.as_deref(),
+                None,
+                limit,
+            )
+            .await
+            .map_err(|err| map_runtime_error("listing pipelines", err))?;
+
+        Ok(Json(ListPipelinesResult {
+            pipelines: pipelines.iter().map(PipelineJsonRow::from).collect(),
+        }))
+    }
+
+    #[tool(
+        name = "bitbucket.get_pipeline",
+        description = "Get details for a specific pipeline.",
+        annotations(read_only_hint = true)
+    )]
+    async fn get_pipeline(
+        &self,
+        Parameters(params): Parameters<GetPipelineParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<PipelineDetailedJsonRow>, McpError> {
+        let (workspace_slug, repo_slug) =
+            resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let pipeline = self
+            .client()
+            .get_pipeline(&workspace_slug, &repo_slug, &params.pipeline_uuid)
+            .await
+            .map_err(|err| map_runtime_error("getting pipeline", err))?;
+
+        Ok(Json(PipelineDetailedJsonRow::from(&pipeline)))
+    }
+
+    #[tool(
+        name = "bitbucket.trigger_pipeline",
+        description = "Trigger a new pipeline run. Supports branch/tag triggers, custom selectors, specific commits, and variables."
+    )]
+    async fn trigger_pipeline(
+        &self,
+        Parameters(params): Parameters<TriggerPipelineParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<PipelineDetailedJsonRow>, McpError> {
+        let (workspace_slug, repo_slug) =
+            resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let mut vars = Vec::new();
+        if let Some(ref variables) = params.variables {
+            for (key, value) in variables {
+                vars.push((key.clone(), value.clone(), false));
+            }
+        }
+        if let Some(ref secure_vars) = params.secure_variables {
+            for (key, value) in secure_vars {
+                vars.push((key.clone(), value.clone(), true));
+            }
+        }
+        let vars_opt = if vars.is_empty() { None } else { Some(vars) };
+
+        let pipeline = self
+            .client()
+            .trigger_pipeline(
+                &workspace_slug,
+                &repo_slug,
+                &params.ref_type,
+                &params.ref_name,
+                params.commit_hash.as_deref(),
+                params.selector_type.as_deref(),
+                params.selector_pattern.as_deref(),
+                vars_opt,
+            )
+            .await
+            .map_err(|err| map_runtime_error("triggering pipeline", err))?;
+
+        Ok(Json(PipelineDetailedJsonRow::from(&pipeline)))
+    }
+
+    #[tool(name = "bitbucket.stop_pipeline", description = "Stop a running pipeline.")]
+    async fn stop_pipeline(
+        &self,
+        Parameters(params): Parameters<StopPipelineParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<String, McpError> {
+        let (workspace_slug, repo_slug) =
+            resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        self.client()
+            .stop_pipeline(&workspace_slug, &repo_slug, &params.pipeline_uuid)
+            .await
+            .map_err(|err| map_runtime_error("stopping pipeline", err))?;
+
+        Ok("Pipeline stopped.".to_string())
+    }
+
+    #[tool(
+        name = "bitbucket.list_pipeline_steps",
+        description = "List steps for a pipeline.",
+        annotations(read_only_hint = true)
+    )]
+    async fn list_pipeline_steps(
+        &self,
+        Parameters(params): Parameters<ListPipelineStepsParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<ListPipelineStepsResult>, McpError> {
+        let (workspace_slug, repo_slug) =
+            resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let steps = self
+            .client()
+            .list_pipeline_steps(&workspace_slug, &repo_slug, &params.pipeline_uuid)
+            .await
+            .map_err(|err| map_runtime_error("listing pipeline steps", err))?;
+
+        Ok(Json(ListPipelineStepsResult {
+            steps: steps.iter().map(PipelineStepJsonRow::from).collect(),
+        }))
+    }
+
+    #[tool(
+        name = "bitbucket.get_pipeline_step",
+        description = "Get details for a specific pipeline step.",
+        annotations(read_only_hint = true)
+    )]
+    async fn get_pipeline_step(
+        &self,
+        Parameters(params): Parameters<GetPipelineStepParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<Json<PipelineStepJsonRow>, McpError> {
+        let (workspace_slug, repo_slug) =
+            resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let step = self
+            .client()
+            .get_pipeline_step(&workspace_slug, &repo_slug, &params.pipeline_uuid, &params.step_uuid)
+            .await
+            .map_err(|err| map_runtime_error("getting pipeline step", err))?;
+
+        Ok(Json(PipelineStepJsonRow::from(&step)))
+    }
+
+    #[tool(
+        name = "bitbucket.get_pipeline_step_log",
+        description = "Get logs for a specific pipeline step.",
+        annotations(read_only_hint = true)
+    )]
+    async fn get_pipeline_step_log(
+        &self,
+        Parameters(params): Parameters<GetPipelineStepLogParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<String, McpError> {
+        let (workspace_slug, repo_slug) =
+            resolve_workspace_repo(params.workspace_slug, params.repo_slug, context).await?;
+
+        let logs = self
+            .client()
+            .get_pipeline_step_log(&workspace_slug, &repo_slug, &params.pipeline_uuid, &params.step_uuid)
+            .await
+            .map_err(|err| map_runtime_error("getting pipeline step log", err))?;
+
+        Ok(logs)
+    }
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -339,6 +523,94 @@ struct ListPullRequestsResult {
 #[derive(Debug, Serialize, JsonSchema)]
 struct ListPullRequestCommentsResult {
     comments: Vec<PullRequestCommentJsonRow>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct ListPipelinesParams {
+    /// Workspace slug (inferred from roots if omitted)
+    workspace_slug: Option<String>,
+    /// Repository slug (inferred from roots if omitted)
+    repo_slug: Option<String>,
+    /// Filter by pipeline status (PENDING, IN_PROGRESS, COMPLETED, FAILED, etc.)
+    status: Option<String>,
+    /// Filter by target branch name
+    target_branch: Option<String>,
+    /// List all pipelines (default: limit to 20)
+    all: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct GetPipelineParams {
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    /// Pipeline UUID
+    pipeline_uuid: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct TriggerPipelineParams {
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    /// Reference type (branch, tag, named_branch, bookmark)
+    ref_type: String,
+    /// Reference name (branch or tag name)
+    ref_name: String,
+    /// Optional specific commit hash
+    commit_hash: Option<String>,
+    /// Custom pipeline selector type (e.g., "custom")
+    selector_type: Option<String>,
+    /// Custom pipeline selector pattern
+    selector_pattern: Option<String>,
+    /// Pipeline variables as key-value pairs
+    variables: Option<std::collections::HashMap<String, String>>,
+    /// Secured pipeline variables as key-value pairs (values will be hidden in logs)
+    secure_variables: Option<std::collections::HashMap<String, String>>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct StopPipelineParams {
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    /// Pipeline UUID to stop
+    pipeline_uuid: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct ListPipelineStepsParams {
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    /// Pipeline UUID
+    pipeline_uuid: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct GetPipelineStepParams {
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    /// Pipeline UUID
+    pipeline_uuid: String,
+    /// Step UUID
+    step_uuid: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+struct GetPipelineStepLogParams {
+    workspace_slug: Option<String>,
+    repo_slug: Option<String>,
+    /// Pipeline UUID
+    pipeline_uuid: String,
+    /// Step UUID
+    step_uuid: String,
+}
+
+#[derive(Debug, Serialize, JsonSchema)]
+struct ListPipelinesResult {
+    pipelines: Vec<PipelineJsonRow>,
+}
+
+#[derive(Debug, Serialize, JsonSchema)]
+struct ListPipelineStepsResult {
+    steps: Vec<PipelineStepJsonRow>,
 }
 
 async fn resolve_workspace_repo(
