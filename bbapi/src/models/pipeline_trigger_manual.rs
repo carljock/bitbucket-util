@@ -15,12 +15,16 @@ use serde::{Deserialize, Serialize};
 pub struct PipelineTriggerManual {
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub r#type: Option<String>,
+    /// The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)
+    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
 impl PipelineTriggerManual {
     pub fn new() -> PipelineTriggerManual {
         PipelineTriggerManual {
             r#type: None,
+            name: None,
         }
     }
 }

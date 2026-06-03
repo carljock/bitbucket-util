@@ -482,13 +482,13 @@ impl BitbucketClient {
             None
         };
 
-        // Build the PipelineRefTarget variant
-        let pipeline_ref_target = models::PipelineRefTarget::PipelineRefTarget {
-            ref_type: Some(ref_type_enum),
-            ref_name: Some(ref_name.to_string()),
-            commit,
-            selector,
-        };
+        // Build the PipelineRefTarget struct
+        let mut pipeline_ref_target = models::PipelineRefTarget::new();
+        pipeline_ref_target.ref_type = Some(ref_type_enum);
+        pipeline_ref_target.ref_name = Some(ref_name.to_string());
+        pipeline_ref_target.commit = commit;
+        pipeline_ref_target.selector = selector;
+        pipeline_ref_target.r#type = Some(models::pipeline_ref_target::Type::PipelineRefTarget);
 
         // Wrap in PipelineTarget enum
         let target = models::PipelineTarget::PipelineRefTarget(pipeline_ref_target);
@@ -715,9 +715,17 @@ impl BitbucketClient {
             });
         }
 
-        serde_json::from_str(body.as_str()).map_err(|err| BbcliError::Parse {
-            context,
-            message: err.to_string(),
+        serde_json::from_str(body.as_str()).map_err(|err| {
+            if context.contains("list pipelines") {
+                use std::io::Write;
+                if let Ok(mut f) = std::fs::File::create("/tmp/response.json") {
+                    let _ = f.write_all(body.as_bytes());
+                }
+            }
+            BbcliError::Parse {
+                context,
+                message: err.to_string(),
+            }
         })
     }
 }
@@ -889,25 +897,15 @@ fn pipeline_to_row(pipeline: models::Pipeline) -> Option<crate::model::PipelineR
             if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
                 serde_json::to_value(target).ok()?,
             ) {
-                // Match on the enum variant to extract fields
-                match pipeline_ref_target {
-                    models::PipelineRefTarget::PipelineRefTarget {
-                        ref_name,
-                        ref_type,
-                        ..
-                    } => {
-                        Some((
-                            ref_name,
-                            ref_type.map(|rt| match rt {
-                                models::pipeline_ref_target::RefType::Branch => "branch",
-                                models::pipeline_ref_target::RefType::Tag => "tag",
-                                models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
-                                models::pipeline_ref_target::RefType::Bookmark => "bookmark",
-                            }),
-                        ))
-                    }
-                    _ => None,
-                }
+                Some((
+                    pipeline_ref_target.ref_name,
+                    pipeline_ref_target.ref_type.map(|rt| match rt {
+                        models::pipeline_ref_target::RefType::Branch => "branch",
+                        models::pipeline_ref_target::RefType::Tag => "tag",
+                        models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
+                        models::pipeline_ref_target::RefType::Bookmark => "bookmark",
+                    }),
+                ))
             } else {
                 None
             }
@@ -953,25 +951,15 @@ fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::Pipelin
             if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
                 serde_json::to_value(target).ok()?,
             ) {
-                // Match on the enum variant to extract fields
-                match pipeline_ref_target {
-                    models::PipelineRefTarget::PipelineRefTarget {
-                        ref_name,
-                        ref_type,
-                        ..
-                    } => {
-                        Some((
-                            ref_name,
-                            ref_type.map(|rt| match rt {
-                                models::pipeline_ref_target::RefType::Branch => "branch",
-                                models::pipeline_ref_target::RefType::Tag => "tag",
-                                models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
-                                models::pipeline_ref_target::RefType::Bookmark => "bookmark",
-                            }),
-                        ))
-                    }
-                    _ => None,
-                }
+                Some((
+                    pipeline_ref_target.ref_name,
+                    pipeline_ref_target.ref_type.map(|rt| match rt {
+                        models::pipeline_ref_target::RefType::Branch => "branch",
+                        models::pipeline_ref_target::RefType::Tag => "tag",
+                        models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
+                        models::pipeline_ref_target::RefType::Bookmark => "bookmark",
+                    }),
+                ))
             } else {
                 None
             }
@@ -986,7 +974,10 @@ fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::Pipelin
         .cloned()
         .unwrap_or_default();
 
-    let trigger_type = pipeline.trigger.as_ref().and_then(|t| t.r#type.clone());
+    let trigger_type = pipeline.trigger.as_ref().map(|t| match t.as_ref() {
+        models::PipelineTrigger::PipelineTriggerManual { .. } => "MANUAL".to_string(),
+        models::PipelineTrigger::PipelineTriggerPush { .. } => "PUSH".to_string(),
+    });
 
     let commit_hash = pipeline
         .target
@@ -995,12 +986,7 @@ fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::Pipelin
             if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
                 serde_json::to_value(target).ok()?,
             ) {
-                match pipeline_ref_target {
-                    models::PipelineRefTarget::PipelineRefTarget { commit, .. } => {
-                        commit.and_then(|c| c.hash)
-                    }
-                    _ => None,
-                }
+                pipeline_ref_target.commit.and_then(|c| c.hash)
             } else {
                 None
             }

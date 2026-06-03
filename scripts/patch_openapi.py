@@ -415,6 +415,38 @@ class OpenAPIPatcher:
         )
         return True
 
+    def remove_schema_discriminator(self, schema_name: str) -> bool:
+        """
+        Remove the discriminator from a schema.
+
+        Args:
+            schema_name: Name of the schema to modify
+
+        Returns:
+            True if discriminator was removed, False otherwise
+        """
+        schemas = self.spec.get("components", {}).get("schemas", {})
+
+        if schema_name not in schemas:
+            self.changes.append(
+                f"⚠️  Schema '{schema_name}' not found - skipping"
+            )
+            return False
+
+        schema = schemas[schema_name]
+
+        if "discriminator" not in schema:
+            self.changes.append(
+                f"ℹ️  No discriminator found in '{schema_name}' - skipping"
+            )
+            return False
+
+        del schema["discriminator"]
+        self.changes.append(
+            f"✓ Removed discriminator from schema '{schema_name}'"
+        )
+        return True
+
     def apply_patch(self, patch: Dict[str, Any]) -> bool:
         """
         Apply a single patch to the specification.
@@ -455,6 +487,8 @@ class OpenAPIPatcher:
                 patch["propertyName"],
                 patch["mapping"],
             )
+        elif patch_type == "remove_schema_discriminator":
+            return self.remove_schema_discriminator(patch["schema"])
         else:
             self.changes.append(
                 f"⚠️  Unknown patch type '{patch_type}' in '{patch_name}' - skipping"

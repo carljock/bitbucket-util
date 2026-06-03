@@ -64,6 +64,16 @@ patches:
     schema: "pipeline_ref_target"
     baseSchema: "pipeline_target"
 
+  - name: "Remove discriminator from flattened pipeline_ref_target"
+    reason: |
+      After flattening, pipeline_ref_target should be a concrete struct, not a
+      discriminated union. The discriminator was inherited from the base
+      pipeline_target schema during flattening, but it shouldn't be there. If
+      left, it causes the generator to create a nested tagged enum which fails
+      deserialization when the parent already handles the discriminator.
+    type: "remove_schema_discriminator"
+    schema: "pipeline_ref_target"
+
   - name: "Flatten pipeline_commit_target schema"
     reason: |
       Similar to pipeline_ref_target, flatten pipeline_commit_target to
@@ -71,6 +81,14 @@ patches:
     type: "flatten_schema"
     schema: "pipeline_commit_target"
     baseSchema: "pipeline_target"
+
+  - name: "Remove discriminator from flattened pipeline_commit_target"
+    reason: |
+      After flattening, pipeline_commit_target should be a concrete struct, not a
+      discriminated union. The discriminator was inherited from the base
+      pipeline_target schema during flattening, but it shouldn't be there.
+    type: "remove_schema_discriminator"
+    schema: "pipeline_commit_target"
 
   - name: "Fix pipeline_trigger required type field"
     reason: |
@@ -128,6 +146,62 @@ patches:
     type: "make_field_optional"
     schema: "account"
     field: "type"
+
+  - name: "Add discriminator mapping for pipeline_trigger"
+    reason: |
+      The API returns trigger objects with concrete types (pipeline_trigger_push,
+      pipeline_trigger_manual) but the OpenAPI spec only defines pipeline_trigger
+      as a base type without discriminator mapping. The Rust generator needs the
+      mapping to properly deserialize the polymorphic types.
+
+      The schema inherits from 'object' with a discriminator on 'type', but the
+      mapping is missing, so deserialization fails when the SDK encounters a
+      'pipeline_trigger_push' or 'pipeline_trigger_manual' type value.
+    type: "add_discriminator_mapping"
+    schema: "pipeline_trigger"
+    propertyName: "type"
+    mapping:
+      "pipeline_trigger_push": "#/components/schemas/pipeline_trigger_push"
+      "pipeline_trigger_manual": "#/components/schemas/pipeline_trigger_manual"
+
+  - name: "Add name field to pipeline_trigger base schema"
+    reason: |
+      The API returns trigger objects with a 'name' field (e.g., {"type": "pipeline_trigger_push", "name": "PUSH"}).
+      The schema needs to include this field so the Rust discriminated enum can properly deserialize it.
+    type: "add_property"
+    schema: "pipeline_trigger"
+    property: "name"
+    spec:
+      type: "string"
+      description: "The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)"
+
+  - name: "Add discriminator mapping for pipeline_state_completed_result"
+    reason: |
+      The API returns pipeline state result objects with concrete types (pipeline_state_completed_failed,
+      pipeline_state_completed_successful, etc.) but the OpenAPI spec only defines pipeline_state_completed_result
+      as a base type without discriminator mapping.
+
+      The schema needs discriminator mapping so the Rust generator can properly deserialize the polymorphic types.
+    type: "add_discriminator_mapping"
+    schema: "pipeline_state_completed_result"
+    propertyName: "type"
+    mapping:
+      "pipeline_state_completed_failed": "#/components/schemas/pipeline_state_completed_failed"
+      "pipeline_state_completed_successful": "#/components/schemas/pipeline_state_completed_successful"
+      "pipeline_state_completed_stopped": "#/components/schemas/pipeline_state_completed_stopped"
+      "pipeline_state_completed_error": "#/components/schemas/pipeline_state_completed_error"
+      "pipeline_state_completed_expired": "#/components/schemas/pipeline_state_completed_expired"
+
+  - name: "Add name field to pipeline_state_completed_result base schema"
+    reason: |
+      The API returns result objects with a 'name' field (e.g., {"type": "pipeline_state_completed_failed", "name": "FAILED"}).
+      The schema needs to include this field so the Rust discriminated enum can properly deserialize it.
+    type: "add_property"
+    schema: "pipeline_state_completed_result"
+    property: "name"
+    spec:
+      type: "string"
+      description: "The name of the result (e.g., FAILED, SUCCESSFUL, STOPPED, ERROR, EXPIRED)"
 
   - name: "Fix Pipeline.target to use concrete types"
     reason: |

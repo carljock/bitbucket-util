@@ -31534,14 +31534,7 @@
             "description": "Type discriminator for pipeline_ref_target"
           }
         },
-        "additionalProperties": true,
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
-            "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
-          }
-        }
+        "additionalProperties": true
       },
       "pipeline_commit_target": {
         "type": "object",
@@ -31560,14 +31553,7 @@
             "description": "Type discriminator for pipeline_commit_target"
           }
         },
-        "additionalProperties": true,
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
-            "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
-          }
-        }
+        "additionalProperties": true
       },
       "pipeline_selector": {
         "allOf": [
@@ -31611,7 +31597,20 @@
             "description": "A representation of the trigger used for a pipeline.",
             "properties": {}
           }
-        ]
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "pipeline_trigger_push": "#/components/schemas/pipeline_trigger_push",
+            "pipeline_trigger_manual": "#/components/schemas/pipeline_trigger_manual"
+          }
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)"
+          }
+        }
       },
       "pipeline_trigger_push": {
         "allOf": [
@@ -31795,7 +31794,23 @@
             "description": "A result of a completed pipeline state.",
             "properties": {}
           }
-        ]
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "pipeline_state_completed_failed": "#/components/schemas/pipeline_state_completed_failed",
+            "pipeline_state_completed_successful": "#/components/schemas/pipeline_state_completed_successful",
+            "pipeline_state_completed_stopped": "#/components/schemas/pipeline_state_completed_stopped",
+            "pipeline_state_completed_error": "#/components/schemas/pipeline_state_completed_error",
+            "pipeline_state_completed_expired": "#/components/schemas/pipeline_state_completed_expired"
+          }
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the result (e.g., FAILED, SUCCESSFUL, STOPPED, ERROR, EXPIRED)"
+          }
+        }
       },
       "pipeline_state_completed_error": {
         "allOf": [

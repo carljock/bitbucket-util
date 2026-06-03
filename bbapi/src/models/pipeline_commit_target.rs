@@ -11,33 +11,36 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum PipelineCommitTarget {
-    #[serde(rename="pipeline_commit_target")]
-    PipelineCommitTarget {
-        #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
-        commit: Option<Box<models::Commit>>,
-        #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
-        selector: Option<Box<models::PipelineSelector>>,
-    },
-    #[serde(rename="pipeline_ref_target")]
-    PipelineRefTarget {
-        #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
-        commit: Option<Box<models::Commit>>,
-        #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
-        selector: Option<Box<models::PipelineSelector>>,
-    },
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PipelineCommitTarget {
+    #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
+    pub commit: Option<Box<models::Commit>>,
+    #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
+    pub selector: Option<Box<models::PipelineSelector>>,
+    /// Type discriminator for pipeline_commit_target
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<Type>,
 }
 
-impl Default for PipelineCommitTarget {
-    fn default() -> Self {
-        Self::PipelineCommitTarget {
-            commit: Default::default(),
-            selector: Default::default(),
+impl PipelineCommitTarget {
+    pub fn new() -> PipelineCommitTarget {
+        PipelineCommitTarget {
+            commit: None,
+            selector: None,
+            r#type: None,
         }
-        
     }
 }
+/// Type discriminator for pipeline_commit_target
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Type {
+    #[serde(rename = "pipeline_commit_target")]
+    PipelineCommitTarget,
+}
 
+impl Default for Type {
+    fn default() -> Type {
+        Self::PipelineCommitTarget
+    }
+}
 

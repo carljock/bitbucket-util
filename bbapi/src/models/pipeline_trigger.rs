@@ -11,17 +11,30 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PipelineTrigger {
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<String>,
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum PipelineTrigger {
+    #[serde(rename="pipeline_trigger_manual")]
+    PipelineTriggerManual {
+        /// The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)
+        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
+    #[serde(rename="pipeline_trigger_push")]
+    PipelineTriggerPush {
+        /// The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)
+        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
 }
 
-impl PipelineTrigger {
-    pub fn new() -> PipelineTrigger {
-        PipelineTrigger {
-            r#type: None,
+impl Default for PipelineTrigger {
+    fn default() -> Self {
+        Self::PipelineTriggerManual {
+            name: Default::default(),
         }
+        
     }
 }
+
 

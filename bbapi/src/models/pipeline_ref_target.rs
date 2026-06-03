@@ -11,49 +11,34 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum PipelineRefTarget {
-    #[serde(rename="pipeline_commit_target")]
-    PipelineCommitTarget {
-        /// The type of reference (branch/tag).
-        #[serde(rename = "ref_type", skip_serializing_if = "Option::is_none")]
-        ref_type: Option<RefType>,
-        /// The name of the reference.
-        #[serde(rename = "ref_name", skip_serializing_if = "Option::is_none")]
-        ref_name: Option<String>,
-        #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
-        commit: Option<Box<models::Commit>>,
-        #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
-        selector: Option<Box<models::PipelineSelector>>,
-    },
-    #[serde(rename="pipeline_ref_target")]
-    PipelineRefTarget {
-        /// The type of reference (branch/tag).
-        #[serde(rename = "ref_type", skip_serializing_if = "Option::is_none")]
-        ref_type: Option<RefType>,
-        /// The name of the reference.
-        #[serde(rename = "ref_name", skip_serializing_if = "Option::is_none")]
-        ref_name: Option<String>,
-        #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
-        commit: Option<Box<models::Commit>>,
-        #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
-        selector: Option<Box<models::PipelineSelector>>,
-    },
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PipelineRefTarget {
+    /// The type of reference (branch/tag).
+    #[serde(rename = "ref_type", skip_serializing_if = "Option::is_none")]
+    pub ref_type: Option<RefType>,
+    /// The name of the reference.
+    #[serde(rename = "ref_name", skip_serializing_if = "Option::is_none")]
+    pub ref_name: Option<String>,
+    #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
+    pub commit: Option<Box<models::Commit>>,
+    #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
+    pub selector: Option<Box<models::PipelineSelector>>,
+    /// Type discriminator for pipeline_ref_target
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<Type>,
 }
 
-impl Default for PipelineRefTarget {
-    fn default() -> Self {
-        Self::PipelineCommitTarget {
-            ref_type: Default::default(),
-            ref_name: Default::default(),
-            commit: Default::default(),
-            selector: Default::default(),
+impl PipelineRefTarget {
+    pub fn new() -> PipelineRefTarget {
+        PipelineRefTarget {
+            ref_type: None,
+            ref_name: None,
+            commit: None,
+            selector: None,
+            r#type: None,
         }
-        
     }
 }
-
 /// The type of reference (branch/tag).
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum RefType {
@@ -70,6 +55,18 @@ pub enum RefType {
 impl Default for RefType {
     fn default() -> RefType {
         Self::Branch
+    }
+}
+/// Type discriminator for pipeline_ref_target
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum Type {
+    #[serde(rename = "pipeline_ref_target")]
+    PipelineRefTarget,
+}
+
+impl Default for Type {
+    fn default() -> Type {
+        Self::PipelineRefTarget
     }
 }
 

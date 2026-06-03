@@ -11,17 +11,48 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PipelineStateCompletedResult {
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<String>,
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum PipelineStateCompletedResult {
+    #[serde(rename="pipeline_state_completed_error")]
+    PipelineStateCompletedError {
+        /// The name of the result (e.g., FAILED, SUCCESSFUL, STOPPED, ERROR, EXPIRED)
+        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
+    #[serde(rename="pipeline_state_completed_expired")]
+    PipelineStateCompletedExpired {
+        /// The name of the result (e.g., FAILED, SUCCESSFUL, STOPPED, ERROR, EXPIRED)
+        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
+    #[serde(rename="pipeline_state_completed_failed")]
+    PipelineStateCompletedFailed {
+        /// The name of the result (e.g., FAILED, SUCCESSFUL, STOPPED, ERROR, EXPIRED)
+        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
+    #[serde(rename="pipeline_state_completed_stopped")]
+    PipelineStateCompletedStopped {
+        /// The name of the result (e.g., FAILED, SUCCESSFUL, STOPPED, ERROR, EXPIRED)
+        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
+    #[serde(rename="pipeline_state_completed_successful")]
+    PipelineStateCompletedSuccessful {
+        /// The name of the result (e.g., FAILED, SUCCESSFUL, STOPPED, ERROR, EXPIRED)
+        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+    },
 }
 
-impl PipelineStateCompletedResult {
-    pub fn new() -> PipelineStateCompletedResult {
-        PipelineStateCompletedResult {
-            r#type: None,
+impl Default for PipelineStateCompletedResult {
+    fn default() -> Self {
+        Self::PipelineStateCompletedError {
+            name: Default::default(),
         }
+        
     }
 }
+
 
