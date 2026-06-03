@@ -30,3 +30,22 @@ patches:
     type: "make_field_optional"
     schema: "object"
     field: "type"
+
+  - name: "Add discriminator mapping for pipeline_target"
+    reason: |
+      The OpenAPI spec defines pipeline_target with a discriminator on the
+      'type' field, but doesn't map discriminator values to concrete types.
+      This prevents the code generator from properly supporting polymorphic
+      deserialization of pipeline targets (pipeline_ref_target,
+      pipeline_commit_target, etc.).
+
+      Adding the discriminator mapping allows the SDK to properly deserialize
+      and serialize pipeline target variants based on the 'type' field value.
+      This enables using the SDK method create_pipeline_for_repository instead
+      of bypassing with raw HTTP requests.
+    type: "add_discriminator_mapping"
+    schema: "pipeline_target"
+    propertyName: "type"
+    mapping:
+      "pipeline_ref_target": "#/components/schemas/pipeline_ref_target"
+      "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"

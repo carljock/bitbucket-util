@@ -183,6 +183,73 @@ class OpenAPIPatcher:
         )
         return True
 
+    def add_discriminator_mapping(
+        self,
+        schema_name: str,
+        property_name: str,
+        mapping: Dict[str, str],
+    ) -> bool:
+        """
+        Add a discriminator mapping to a schema.
+
+        For schemas using allOf that reference a base schema with discriminator,
+        this adds a discriminator directly to the schema with the mapping.
+
+        Args:
+            schema_name: Name of the schema to modify
+            property_name: Name of the discriminator property
+            mapping: Dictionary mapping discriminator values to schema references
+
+        Returns:
+            True if the mapping was added, False otherwise
+        """
+        schemas = self.spec.get("components", {}).get("schemas", {})
+
+        if schema_name not in schemas:
+            self.changes.append(
+                f"⚠️  Schema '{schema_name}' not found - skipping"
+            )
+            return False
+
+        schema = schemas[schema_name]
+
+        # If schema doesn't have discriminator directly, add it
+        if "discriminator" not in schema:
+            if "allOf" in schema:
+                # For allOf schemas that inherit from object, add discriminator here
+                schema["discriminator"] = {
+                    "propertyName": property_name,
+                    "mapping": mapping,
+                }
+                self.changes.append(
+                    f"✓ Added discriminator mapping to allOf schema '{schema_name}' with {len(mapping)} entries"
+                )
+                return True
+            else:
+                self.changes.append(
+                    f"⚠️  No discriminator found and not an allOf schema '{schema_name}' - skipping"
+                )
+                return False
+
+        discriminator = schema["discriminator"]
+        if discriminator.get("propertyName") != property_name:
+            self.changes.append(
+                f"⚠️  Discriminator property name mismatch in '{schema_name}' - skipping"
+            )
+            return False
+
+        if "mapping" in discriminator and discriminator["mapping"]:
+            self.changes.append(
+                f"ℹ️  Discriminator mapping already exists in '{schema_name}' - skipping"
+            )
+            return False
+
+        discriminator["mapping"] = mapping
+        self.changes.append(
+            f"✓ Added discriminator mapping to schema '{schema_name}' with {len(mapping)} entries"
+        )
+        return True
+
     def apply_patch(self, patch: Dict[str, Any]) -> bool:
         """
         Apply a single patch to the specification.
@@ -210,6 +277,12 @@ class OpenAPIPatcher:
             )
         elif patch_type == "set_nullable":
             return self.set_nullable(patch["schema"], patch["property"])
+        elif patch_type == "add_discriminator_mapping":
+            return self.add_discriminator_mapping(
+                patch["schema"],
+                patch["propertyName"],
+                patch["mapping"],
+            )
         else:
             self.changes.append(
                 f"⚠️  Unknown patch type '{patch_type}' in '{patch_name}' - skipping"

@@ -11,17 +11,23 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PipelineTarget {
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<String>,
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum PipelineTarget {
+    #[serde(rename="pipeline_commit_target")]
+    PipelineCommitTarget {
+    },
+    #[serde(rename="pipeline_ref_target")]
+    PipelineRefTarget {
+    },
 }
 
-impl PipelineTarget {
-    pub fn new() -> PipelineTarget {
-        PipelineTarget {
-            r#type: None,
+impl Default for PipelineTarget {
+    fn default() -> Self {
+        Self::PipelineCommitTarget {
         }
+        
     }
 }
+
 
