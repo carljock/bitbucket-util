@@ -443,7 +443,7 @@ impl BitbucketClient {
         selector_pattern: Option<&str>,
         variables: Option<Vec<(String, String, bool)>>,
     ) -> Result<crate::model::PipelineDetailedRow, BbcliError> {
-        // Build the complete request as JSON to preserve all fields
+        // Build the request as JSON with proper discriminated union structure
         let mut target_json = serde_json::json!({
             "type": "pipeline_ref_target",
             "ref_type": ref_type,
@@ -487,8 +487,7 @@ impl BitbucketClient {
             pipeline_json["variables"] = serde_json::Value::Array(vars_json);
         }
 
-
-        // Send the request directly with raw JSON to preserve all fields
+        // Send the request directly with raw JSON to preserve discriminated union structure
         let uri = format!(
             "{}/repositories/{}/{}/pipelines",
             self.config.base_path,
