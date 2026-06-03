@@ -13,9 +13,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PipelineTriggerPush {
+    /// The trigger type (e.g., push, manual, pull_request, etc.)
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub r#type: Option<String>,
-    /// The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)
+    /// The name of the trigger
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }

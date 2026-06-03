@@ -31591,31 +31591,19 @@
         ]
       },
       "pipeline_trigger": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/object"
-          },
-          {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Pipeline Trigger",
-            "description": "A representation of the trigger used for a pipeline.",
-            "properties": {}
-          }
-        ],
-        "discriminator": {
-          "propertyName": "type",
-          "mapping": {
-            "pipeline_trigger_push": "#/components/schemas/pipeline_trigger_push",
-            "pipeline_trigger_manual": "#/components/schemas/pipeline_trigger_manual"
-          }
-        },
+        "type": "object",
+        "description": "A representation of the trigger used for a pipeline",
         "properties": {
+          "type": {
+            "type": "string",
+            "description": "The trigger type (e.g., push, manual, pull_request, etc.)"
+          },
           "name": {
             "type": "string",
-            "description": "The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)"
+            "description": "The name of the trigger"
           }
-        }
+        },
+        "additionalProperties": true
       },
       "pipeline_trigger_push": {
         "allOf": [

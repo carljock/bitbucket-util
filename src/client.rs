@@ -984,10 +984,7 @@ fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::Pipelin
         .cloned()
         .unwrap_or_default();
 
-    let trigger_type = pipeline.trigger.as_ref().map(|t| match t.as_ref() {
-        models::PipelineTrigger::PipelineTriggerManual { .. } => "MANUAL".to_string(),
-        models::PipelineTrigger::PipelineTriggerPush { .. } => "PUSH".to_string(),
-    });
+    let trigger_type = pipeline.trigger.as_ref().and_then(|t| t.name.clone());
 
     let commit_hash = pipeline
         .target

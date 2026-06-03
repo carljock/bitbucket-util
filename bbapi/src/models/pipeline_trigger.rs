@@ -11,30 +11,24 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum PipelineTrigger {
-    #[serde(rename="pipeline_trigger_manual")]
-    PipelineTriggerManual {
-        /// The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)
-        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
-        name: Option<String>,
-    },
-    #[serde(rename="pipeline_trigger_push")]
-    PipelineTriggerPush {
-        /// The name of the trigger (e.g., PUSH for push triggers, MANUAL for manual triggers)
-        #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
-        name: Option<String>,
-    },
+/// PipelineTrigger : A representation of the trigger used for a pipeline
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PipelineTrigger {
+    /// The trigger type (e.g., push, manual, pull_request, etc.)
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
+    /// The name of the trigger
+    #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
-impl Default for PipelineTrigger {
-    fn default() -> Self {
-        Self::PipelineTriggerManual {
-            name: Default::default(),
+impl PipelineTrigger {
+    /// A representation of the trigger used for a pipeline
+    pub fn new() -> PipelineTrigger {
+        PipelineTrigger {
+            r#type: None,
+            name: None,
         }
-        
     }
 }
-
 

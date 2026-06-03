@@ -28,7 +28,7 @@ pub struct Pipeline {
     #[serde(rename = "target", skip_serializing_if = "Option::is_none")]
     pub target: Option<Box<models::PipelineTarget>>,
     #[serde(rename = "trigger", skip_serializing_if = "Option::is_none")]
-    pub trigger: Option<Box<models::PipelineTrigger>>,
+    pub trigger: Option<models::PipelineTrigger>,
     #[serde(rename = "state", skip_serializing_if = "Option::is_none")]
     pub state: Option<Box<models::PipelineState>>,
     /// The variables for the pipeline.

@@ -31569,18 +31569,19 @@
         ]
       },
       "pipeline_trigger": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/object"
+        "type": "object",
+        "description": "A representation of the trigger used for a pipeline",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The trigger type (e.g., push, manual, pull_request, etc.)"
           },
-          {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Pipeline Trigger",
-            "description": "A representation of the trigger used for a pipeline.",
-            "properties": {}
+          "name": {
+            "type": "string",
+            "description": "The name of the trigger"
           }
-        ]
+        },
+        "additionalProperties": true
       },
       "pipeline_trigger_push": {
         "allOf": [

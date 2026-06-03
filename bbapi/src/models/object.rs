@@ -255,15 +255,6 @@ pub enum Object {
     #[serde(rename="pipeline_target")]
     PipelineTarget {
     },
-    #[serde(rename="pipeline_trigger")]
-    PipelineTrigger {
-    },
-    #[serde(rename="pipeline_trigger_manual")]
-    PipelineTriggerManual {
-    },
-    #[serde(rename="pipeline_trigger_push")]
-    PipelineTriggerPush {
-    },
     #[serde(rename="pipeline_variable")]
     PipelineVariable {
     },
