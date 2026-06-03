@@ -9,8 +9,8 @@ Name | Type | Description | Notes
 **repository** | Option<[**models::Repository**](Repository.md)> |  | [optional]
 **comment** | Option<**String**> | The comment parsed from the deploy key (if present) | [optional]
 **label** | Option<**String**> | The user-defined label for the deploy key | [optional]
-**added_on** | Option<**String**> |  | [optional]
-**last_used** | Option<**String**> |  | [optional]
+**added_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
+**last_used** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
 **links** | Option<[**models::BranchingModelSettingsLinks**](BranchingModelSettingsLinks.md)> |  | [optional]
 **owner** | Option<[**models::Account**](Account.md)> |  | [optional]
 

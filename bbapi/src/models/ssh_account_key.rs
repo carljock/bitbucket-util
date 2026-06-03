@@ -28,15 +28,15 @@ pub struct SshAccountKey {
     #[serde(rename = "label", skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "last_used", skip_serializing_if = "Option::is_none")]
-    pub last_used: Option<String>,
+    pub last_used: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::BranchingModelSettingsLinks>>,
     #[serde(rename = "owner", skip_serializing_if = "Option::is_none")]
     pub owner: Option<Box<models::Account>>,
     #[serde(rename = "expires_on", skip_serializing_if = "Option::is_none")]
-    pub expires_on: Option<String>,
+    pub expires_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The SSH key fingerprint in SHA-256 format.
     #[serde(rename = "fingerprint", skip_serializing_if = "Option::is_none")]
     pub fingerprint: Option<String>,

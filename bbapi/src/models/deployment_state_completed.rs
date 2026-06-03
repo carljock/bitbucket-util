@@ -27,10 +27,10 @@ pub struct DeploymentStateCompleted {
     pub status: Option<Box<models::DeploymentStateCompletedStatus>>,
     /// The timestamp when the deployment was started.
     #[serde(rename = "start_date", skip_serializing_if = "Option::is_none")]
-    pub start_date: Option<String>,
+    pub start_date: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The timestamp when the deployment completed.
     #[serde(rename = "completion_date", skip_serializing_if = "Option::is_none")]
-    pub completion_date: Option<String>,
+    pub completion_date: Option<chrono::DateTime<chrono::FixedOffset>>,
 }
 
 impl DeploymentStateCompleted {

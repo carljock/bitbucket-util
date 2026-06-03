@@ -36,10 +36,10 @@ pub struct Pipeline {
     pub variables: Option<Vec<models::PipelineVariable>>,
     /// The timestamp when the pipeline was created.
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The timestamp when the Pipeline was completed. This is not set if the pipeline is still in progress.
     #[serde(rename = "completed_on", skip_serializing_if = "Option::is_none")]
-    pub completed_on: Option<String>,
+    pub completed_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The number of build seconds used by this pipeline.
     #[serde(rename = "build_seconds_used", skip_serializing_if = "Option::is_none")]
     pub build_seconds_used: Option<i32>,

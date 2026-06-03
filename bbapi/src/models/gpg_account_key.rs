@@ -29,20 +29,17 @@ pub struct GpgAccountKey {
     /// The fingerprint of the parent key. This value is null unless the current key is a subkey.
     #[serde(rename = "parent_fingerprint", skip_serializing_if = "Option::is_none")]
     pub parent_fingerprint: Option<String>,
-    /// The comment parsed from the GPG key (if present)
-    #[serde(rename = "comment", skip_serializing_if = "Option::is_none")]
-    pub comment: Option<String>,
     /// The user-defined label for the GPG key
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(rename = "expires_on", skip_serializing_if = "Option::is_none")]
-    pub expires_on: Option<String>,
+    pub expires_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "added_on", skip_serializing_if = "Option::is_none")]
-    pub added_on: Option<String>,
+    pub added_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "last_used", skip_serializing_if = "Option::is_none")]
-    pub last_used: Option<String>,
+    pub last_used: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "subkeys", skip_serializing_if = "Option::is_none")]
     pub subkeys: Option<Vec<models::GpgAccountKey>>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
@@ -58,7 +55,6 @@ impl GpgAccountKey {
             key_id: None,
             fingerprint: None,
             parent_fingerprint: None,
-            comment: None,
             name: None,
             expires_on: None,
             created_on: None,

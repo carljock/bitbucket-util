@@ -16,9 +16,9 @@ pub struct PullrequestCommentTask {
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
     pub id: Option<i64>,
     #[serde(rename = "created_on")]
-    pub created_on: String,
+    pub created_on: chrono::DateTime<chrono::FixedOffset>,
     #[serde(rename = "updated_on")]
-    pub updated_on: String,
+    pub updated_on: chrono::DateTime<chrono::FixedOffset>,
     #[serde(rename = "state")]
     pub state: State,
     #[serde(rename = "content")]
@@ -29,7 +29,7 @@ pub struct PullrequestCommentTask {
     pub pending: Option<bool>,
     /// The ISO8601 timestamp for when the task was resolved.
     #[serde(rename = "resolved_on", skip_serializing_if = "Option::is_none")]
-    pub resolved_on: Option<String>,
+    pub resolved_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "resolved_by", skip_serializing_if = "Option::is_none")]
     pub resolved_by: Option<Box<models::Account>>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
@@ -39,7 +39,7 @@ pub struct PullrequestCommentTask {
 }
 
 impl PullrequestCommentTask {
-    pub fn new(created_on: String, updated_on: String, state: State, content: models::TaskContent, creator: models::Account) -> PullrequestCommentTask {
+    pub fn new(created_on: chrono::DateTime<chrono::FixedOffset>, updated_on: chrono::DateTime<chrono::FixedOffset>, state: State, content: models::TaskContent, creator: models::Account) -> PullrequestCommentTask {
         PullrequestCommentTask {
             id: None,
             created_on,

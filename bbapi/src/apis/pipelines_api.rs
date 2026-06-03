@@ -2421,7 +2421,7 @@ pub async fn get_pipeline_variables_for_workspace(configuration: &configuration:
 }
 
 /// Find pipelines in a repository.  Note that unlike other endpoints in the Bitbucket API, this endpoint utilizes query parameters to allow filtering and sorting of returned results. See [query parameters](#api-repositories-workspace-repo-slug-pipelines-get-request-Query%20parameters) for specific details. 
-pub async fn get_pipelines_for_repository(configuration: &configuration::Configuration, workspace: &str, repo_slug: &str, creator_uuid: Option<&str>, target_ref_type: Option<&str>, target_ref_name: Option<&str>, target_branch: Option<&str>, target_commit_hash: Option<&str>, target_selector_pattern: Option<&str>, target_selector_type: Option<&str>, created_on: Option<String>, trigger_type: Option<&str>, status: Option<&str>, sort: Option<&str>, page: Option<i32>, pagelen: Option<i32>) -> Result<models::PaginatedPipelines, Error<GetPipelinesForRepositoryError>> {
+pub async fn get_pipelines_for_repository(configuration: &configuration::Configuration, workspace: &str, repo_slug: &str, creator_uuid: Option<&str>, target_ref_type: Option<&str>, target_ref_name: Option<&str>, target_branch: Option<&str>, target_commit_hash: Option<&str>, target_selector_pattern: Option<&str>, target_selector_type: Option<&str>, created_on: Option<chrono::DateTime<chrono::FixedOffset>>, trigger_type: Option<&str>, status: Option<&str>, sort: Option<&str>, page: Option<i32>, pagelen: Option<i32>) -> Result<models::PaginatedPipelines, Error<GetPipelinesForRepositoryError>> {
     // add a prefix to parameters to efficiently prevent name collisions
     let p_path_workspace = workspace;
     let p_path_repo_slug = repo_slug;

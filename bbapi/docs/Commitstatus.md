@@ -12,8 +12,8 @@ Name | Type | Description | Notes
 **state** | **State** | Provides some indication of the status of this commit (enum: FAILED, INPROGRESS, STOPPED, SUCCESSFUL) | 
 **name** | Option<**String**> | An identifier for the build itself, e.g. BB-DEPLOY-1 | [optional]
 **description** | Option<**String**> | A description of the build (e.g. \"Unit tests in Bamboo\") | [optional]
-**created_on** | Option<**String**> |  | [optional]
-**updated_on** | Option<**String**> |  | [optional]
+**created_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
+**updated_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

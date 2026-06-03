@@ -15,8 +15,8 @@ Name | Type | Description | Notes
 **result** | Option<**Result**> | The state of the report. May be set to PENDING and later updated. (enum: PASSED, FAILED, SKIPPED, IGNORED) | [optional]
 **severity** | Option<**Severity**> | The severity of the annotation. (enum: CRITICAL, HIGH, MEDIUM, LOW) | [optional]
 **link** | Option<**String**> | A URL linking to the annotation in an external tool. | [optional]
-**created_on** | Option<**String**> | The timestamp when the report was created. | [optional]
-**updated_on** | Option<**String**> | The timestamp when the report was updated. | [optional]
+**created_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> | The timestamp when the report was created. | [optional]
+**updated_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> | The timestamp when the report was updated. | [optional]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

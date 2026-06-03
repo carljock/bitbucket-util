@@ -34,9 +34,9 @@ pub struct Project {
     #[serde(rename = "is_private", skip_serializing_if = "Option::is_none")]
     pub is_private: Option<bool>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "updated_on", skip_serializing_if = "Option::is_none")]
-    pub updated_on: Option<String>,
+    pub updated_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     ///  Indicates whether the project contains publicly visible repositories. Note that private projects cannot contain public repositories.
     #[serde(rename = "has_publicly_visible_repos", skip_serializing_if = "Option::is_none")]
     pub has_publicly_visible_repos: Option<bool>,

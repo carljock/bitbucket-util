@@ -4,6 +4,7 @@ All URIs are relative to *https://api.bitbucket.org/2.0*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**addon_addon_key_client_key_get**](AddonApi.md#addon_addon_key_client_key_get) | **GET** /addon/{addon_key}/client-key | Get the client key of a Connect addon
 [**addon_delete**](AddonApi.md#addon_delete) | **DELETE** /addon | Delete an app
 [**addon_linkers_get**](AddonApi.md#addon_linkers_get) | **GET** /addon/linkers | List linkers for an app
 [**addon_linkers_linker_key_get**](AddonApi.md#addon_linkers_linker_key_get) | **GET** /addon/linkers/{linker_key} | Get a linker for an app
@@ -15,6 +16,36 @@ Method | HTTP request | Description
 [**addon_linkers_linker_key_values_value_id_get**](AddonApi.md#addon_linkers_linker_key_values_value_id_get) | **GET** /addon/linkers/{linker_key}/values/{value_id} | Get a linker value
 [**addon_put**](AddonApi.md#addon_put) | **PUT** /addon | Update an installed app
 
+
+
+## addon_addon_key_client_key_get
+
+> addon_addon_key_client_key_get(addon_key)
+Get the client key of a Connect addon
+
+Get the client key of the Connect addon associated with a Forge app install via forgeAppId linkage.  This endpoint is part of the Connect -> Forge migration tooling. It is intended to be used by a Forge app using `asApp().requestBitbucket()` only. Prerequisite: app developer needs to register the linkage between their Connect and Forge app by setting `forgeAppId` in the Connect addon descriptor to `app.id` from Forge app manifest, then update the installations. If the request came from an installation of a registered Forge app, the client key of the linked Connect addon installed in the same workspace will be returned.  ``` api.asApp().requestBitbucket(route`/2.0/addon/{addon-key}/client-key`) ```
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**addon_key** | **String** | The Connect addon key as defined in an application descriptor.  | [required] |
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[api_key](../README.md#api_key), [oauth2](../README.md#oauth2), [basic](../README.md#basic)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 
 ## addon_delete

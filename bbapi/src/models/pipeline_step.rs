@@ -20,10 +20,10 @@ pub struct PipelineStep {
     pub uuid: Option<String>,
     /// The timestamp when the step execution was started. This is not set when the step hasn't executed yet.
     #[serde(rename = "started_on", skip_serializing_if = "Option::is_none")]
-    pub started_on: Option<String>,
+    pub started_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The timestamp when the step execution was completed. This is not set if the step is still in progress.
     #[serde(rename = "completed_on", skip_serializing_if = "Option::is_none")]
-    pub completed_on: Option<String>,
+    pub completed_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "state", skip_serializing_if = "Option::is_none")]
     pub state: Option<Box<models::PipelineStepState>>,
     #[serde(rename = "image", skip_serializing_if = "Option::is_none")]

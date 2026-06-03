@@ -27,7 +27,7 @@ pub struct Tag {
     pub message: Option<String>,
     /// The date that the tag was created, if available
     #[serde(rename = "date", skip_serializing_if = "Option::is_none")]
-    pub date: Option<String>,
+    pub date: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "tagger", skip_serializing_if = "Option::is_none")]
     pub tagger: Option<Box<models::Author>>,
 }

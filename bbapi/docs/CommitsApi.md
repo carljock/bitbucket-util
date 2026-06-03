@@ -27,6 +27,7 @@ Method | HTTP request | Description
 [**repositories_workspace_repo_slug_commits_revision_post**](CommitsApi.md#repositories_workspace_repo_slug_commits_revision_post) | **POST** /repositories/{workspace}/{repo_slug}/commits/{revision} | List commits for revision using include/exclude
 [**repositories_workspace_repo_slug_diff_spec_get**](CommitsApi.md#repositories_workspace_repo_slug_diff_spec_get) | **GET** /repositories/{workspace}/{repo_slug}/diff/{spec} | Compare two commits
 [**repositories_workspace_repo_slug_diffstat_spec_get**](CommitsApi.md#repositories_workspace_repo_slug_diffstat_spec_get) | **GET** /repositories/{workspace}/{repo_slug}/diffstat/{spec} | Compare two commit diff stats
+[**repositories_workspace_repo_slug_file_conflicts_spec_get**](CommitsApi.md#repositories_workspace_repo_slug_file_conflicts_spec_get) | **GET** /repositories/{workspace}/{repo_slug}/file-conflicts/{spec} | Get file conflicts for a commit spec
 [**repositories_workspace_repo_slug_merge_base_revspec_get**](CommitsApi.md#repositories_workspace_repo_slug_merge_base_revspec_get) | **GET** /repositories/{workspace}/{repo_slug}/merge-base/{revspec} | Get the common ancestor between two commits
 [**repositories_workspace_repo_slug_patch_spec_get**](CommitsApi.md#repositories_workspace_repo_slug_patch_spec_get) | **GET** /repositories/{workspace}/{repo_slug}/patch/{spec} | Get a patch for two commits
 
@@ -786,6 +787,38 @@ Name | Type | Description  | Required | Notes
 ### Return type
 
 [**models::PaginatedDiffstats**](paginated_diffstats.md)
+
+### Authorization
+
+[api_key](../README.md#api_key), [oauth2](../README.md#oauth2), [basic](../README.md#basic)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## repositories_workspace_repo_slug_file_conflicts_spec_get
+
+> models::PaginatedFileConflicts repositories_workspace_repo_slug_file_conflicts_spec_get(repo_slug, spec, workspace)
+Get file conflicts for a commit spec
+
+Get file conflicts for a commit spec
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**repo_slug** | **String** | This can either be the repository slug or the UUID of the repository, surrounded by curly-braces, for example: `{repository UUID}`.  | [required] |
+**spec** | **String** | A commit SHA (e.g. `3a8b42`) or a commit range using double dot notation (e.g. `3a8b42..9ff173`).  | [required] |
+**workspace** | **String** | This can either be the workspace ID (slug) or the workspace UUID surrounded by curly-braces, for example: `{workspace UUID}`.  | [required] |
+
+### Return type
+
+[**models::PaginatedFileConflicts**](paginated_file_conflicts.md)
 
 ### Authorization
 

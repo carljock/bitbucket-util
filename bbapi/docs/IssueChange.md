@@ -7,7 +7,7 @@ Name | Type | Description | Notes
 **r#type** | **String** |  | 
 **links** | Option<[**models::IssueChangeLinks**](IssueChangeLinks.md)> |  | [optional]
 **name** | Option<**String**> |  | [optional]
-**created_on** | Option<**String**> |  | [optional]
+**created_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
 **user** | Option<[**models::Account**](Account.md)> |  | [optional]
 **issue** | Option<[**models::Issue**](Issue.md)> |  | [optional]
 **changes** | Option<[**models::IssueChangeChanges**](IssueChangeChanges.md)> |  | [optional]

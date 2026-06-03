@@ -58,6 +58,7 @@ docs/EffectiveRepoBranchingModel.md
 docs/Error.md
 docs/ErrorError.md
 docs/ExportOptions.md
+docs/FileConflict.md
 docs/GpgAccountKey.md
 docs/GpgApi.md
 docs/Group.md
@@ -91,6 +92,7 @@ docs/PaginatedDeploymentVariable.md
 docs/PaginatedDeployments.md
 docs/PaginatedDiffstats.md
 docs/PaginatedEnvironments.md
+docs/PaginatedFileConflicts.md
 docs/PaginatedFiles.md
 docs/PaginatedGpgUserKeys.md
 docs/PaginatedHookEvents.md
@@ -344,6 +346,7 @@ src/models/effective_repo_branching_model.rs
 src/models/error.rs
 src/models/error_error.rs
 src/models/export_options.rs
+src/models/file_conflict.rs
 src/models/gpg_account_key.rs
 src/models/group.rs
 src/models/group_links.rs
@@ -377,6 +380,7 @@ src/models/paginated_deployment_variable.rs
 src/models/paginated_deployments.rs
 src/models/paginated_diffstats.rs
 src/models/paginated_environments.rs
+src/models/paginated_file_conflicts.rs
 src/models/paginated_files.rs
 src/models/paginated_gpg_user_keys.rs
 src/models/paginated_hook_events.rs

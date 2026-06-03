@@ -38,7 +38,7 @@ pub struct PipelineCache {
     pub file_size_bytes: Option<i32>,
     /// The timestamp when the cache was created.
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
 }
 
 impl PipelineCache {

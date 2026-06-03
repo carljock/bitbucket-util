@@ -524,6 +524,84 @@
         }
       ]
     },
+    "/addon/{addon_key}/client-key": {
+      "get": {
+        "tags": [
+          "Addon"
+        ],
+        "description": "Get the client key of the Connect addon associated with a Forge app install via forgeAppId linkage.\n\nThis endpoint is part of the Connect -> Forge migration tooling. It is intended to be used by a Forge app\nusing `asApp().requestBitbucket()` only.\nPrerequisite: app developer needs to register the linkage between their Connect and Forge app by setting\n`forgeAppId` in the Connect addon descriptor to `app.id` from Forge app manifest, then update the installations.\nIf the request came from an installation of a registered Forge app, the client key of the linked Connect addon\ninstalled in the same workspace will be returned.\n\n```\napi.asApp().requestBitbucket(route`/2.0/addon/{addon-key}/client-key`)\n```",
+        "summary": "Get the client key of a Connect addon",
+        "responses": {
+          "200": {
+            "description": "The client key of the Connect addon linked to the Forge app installation where the request was made"
+          },
+          "401": {
+            "description": "Invalid authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Improper authorization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The Connect addon or the Forge app does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oauth2": []
+          },
+          {
+            "basic": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "x-atlassian-oauth2-scopes": [
+          {
+            "state": "Current",
+            "scheme": "oauth2",
+            "scopes": [
+              "admin:workspace:bitbucket"
+            ]
+          }
+        ],
+        "x-atlassian-auth-types": [
+          "forge-oauth2"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "addon_key",
+          "in": "path",
+          "description": "The Connect addon key as defined in an application descriptor.\n",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
     "/hook_events": {
       "get": {
         "tags": [
@@ -5412,7 +5490,7 @@
         "tags": [
           "Deployments"
         ],
-        "description": "Create a new deploy key in a repository.\n\nThe same key needs to be passed in but the comment and label can change.\n\nExample:\n```\n$ curl -X PUT \\\n-H \"Authorization <auth header>\" \\\n-H \"Content-type: application/json\" \\\nhttps://api.bitbucket.org/2.0/repositories/mleu/test/deploy-keys/1234 -d \\\n'{\n    \"label\": \"newlabel\",\n    \"key\": \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAK/b1cHHDr/TEV1JGQl+WjCwStKG6Bhrv0rFpEsYlyTBm1fzN0VOJJYn4ZOPCPJwqse6fGbXntEs+BbXiptR+++HycVgl65TMR0b5ul5AgwrVdZdT7qjCOCgaSV74/9xlHDK8oqgGnfA7ZoBBU+qpVyaloSjBdJfLtPY/xqj4yHnXKYzrtn/uFc4Kp9Tb7PUg9Io3qohSTGJGVHnsVblq/rToJG7L5xIo0OxK0SJSQ5vuId93ZuFZrCNMXj8JDHZeSEtjJzpRCBEXHxpOPhAcbm4MzULgkFHhAVgp4JbkrT99/wpvZ7r9AdkTg7HGqL3rlaDrEcWfL7Lu6TnhBdq5 newcomment\",\n}'\n```",
+        "description": "Update an existing deploy key in a repository.\n\nThe same key needs to be passed in but the comment and label can change.\n\nExample:\n```\n$ curl -X PUT \\\n-H \"Authorization <auth header>\" \\\n-H \"Content-type: application/json\" \\\nhttps://api.bitbucket.org/2.0/repositories/mleu/test/deploy-keys/1234 -d \\\n'{\n    \"label\": \"newlabel\",\n    \"key\": \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAK/b1cHHDr/TEV1JGQl+WjCwStKG6Bhrv0rFpEsYlyTBm1fzN0VOJJYn4ZOPCPJwqse6fGbXntEs+BbXiptR+++HycVgl65TMR0b5ul5AgwrVdZdT7qjCOCgaSV74/9xlHDK8oqgGnfA7ZoBBU+qpVyaloSjBdJfLtPY/xqj4yHnXKYzrtn/uFc4Kp9Tb7PUg9Io3qohSTGJGVHnsVblq/rToJG7L5xIo0OxK0SJSQ5vuId93ZuFZrCNMXj8JDHZeSEtjJzpRCBEXHxpOPhAcbm4MzULgkFHhAVgp4JbkrT99/wpvZ7r9AdkTg7HGqL3rlaDrEcWfL7Lu6TnhBdq5 newcomment\",\n}'\n```",
         "summary": "Update a repository deploy key",
         "responses": {
           "200": {
@@ -7287,6 +7365,100 @@
         ]
       }
     },
+    "/repositories/{workspace}/{repo_slug}/file-conflicts/{spec}": {
+      "get": {
+        "tags": [
+          "Commits"
+        ],
+        "description": "Get file conflicts for a commit spec",
+        "summary": "Get file conflicts for a commit spec",
+        "responses": {
+          "200": {
+            "description": "A paginated list of file conflicts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/paginated_file_conflicts"
+                },
+                "examples": {
+                  "response": {
+                    "value": {
+                      "pagelen": 500,
+                      "page": 1,
+                      "size": 2,
+                      "values": [
+                        {
+                          "path": "src/main/App.java",
+                          "scenario": "content",
+                          "message": "File modified in both source and destination"
+                        },
+                        {
+                          "path": "README.md",
+                          "scenario": "content",
+                          "message": "File modified in both source and destination"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "If the spec cannot be resolved, which may be due to an invalid spec, or commits/refs not present in the repository",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oauth2": [
+              "repository"
+            ]
+          },
+          {
+            "basic": []
+          },
+          {
+            "api_key": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "repo_slug",
+          "in": "path",
+          "description": "This can either be the repository slug or the UUID of the repository,\nsurrounded by curly-braces, for example: `{repository UUID}`.\n",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "spec",
+          "in": "path",
+          "description": "A commit SHA (e.g. `3a8b42`) or a commit range using double dot\nnotation (e.g. `3a8b42..9ff173`).\n",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "workspace",
+          "in": "path",
+          "description": "This can either be the workspace ID (slug) or the workspace UUID\nsurrounded by curly-braces, for example: `{workspace UUID}`.\n",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
     "/repositories/{workspace}/{repo_slug}/filehistory/{commit}/{path}": {
       "get": {
         "tags": [
@@ -8197,7 +8369,7 @@
               }
             }
           },
-          "description": "The options to apply to the export. Available options include `project_key` and `project_name` which, if specified, are used as the project key and name in the exported Jira json format. Option `send_email` specifies whether an email should be sent upon export result. Option `include_attachments` specifies whether attachments are included in the export."
+          "description": "The options to apply to the export. Available options include `project_key` and `project_name` which, if specified, are used as the Jira space key and name in the exported Jira json format. Option `send_email` specifies whether an email should be sent upon export result. Option `include_attachments` specifies whether attachments are included in the export."
         },
         "security": [
           {
@@ -17019,6 +17191,75 @@
         }
       ]
     },
+    "/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/conflicts": {
+      "get": {
+        "tags": [
+          "Pullrequests"
+        ],
+        "description": "Redirects to the [repository file conflicts](/cloud/bitbucket/rest/api-group-commits/#api-repositories-workspace-repo-slug-file-conflicts-spec-get)\nwith the revspec that corresponds to the pull request.",
+        "summary": "Get file conflicts for a pull request",
+        "responses": {
+          "302": {
+            "description": "Redirects to the [repository file conflicts](/cloud/bitbucket/rest/api-group-commits/#api-repositories-workspace-repo-slug-file-conflicts-spec-get) with the\nrevspec that corresponds to the pull request.\n"
+          }
+        },
+        "security": [
+          {
+            "oauth2": [
+              "pullrequest"
+            ]
+          },
+          {
+            "basic": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "x-atlassian-oauth2-scopes": [
+          {
+            "state": "Current",
+            "scheme": "oauth2",
+            "scopes": [
+              "read:pullrequest:bitbucket"
+            ]
+          }
+        ],
+        "x-atlassian-auth-types": [
+          "forge-oauth2",
+          "api-token"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "pull_request_id",
+          "in": "path",
+          "description": "The id of the pull request.",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "repo_slug",
+          "in": "path",
+          "description": "This can either be the repository slug or the UUID of the repository,\nsurrounded by curly-braces, for example: `{repository UUID}`.\n",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "workspace",
+          "in": "path",
+          "description": "This can either be the workspace ID (slug) or the workspace UUID\nsurrounded by curly-braces, for example: `{workspace UUID}`.\n",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
     "/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/decline": {
       "post": {
         "tags": [
@@ -22594,8 +22835,9 @@
         "tags": [
           "Search"
         ],
+        "deprecated": true,
         "summary": "Search for code in a team's repositories",
-        "description": "Search for code in the repositories of the specified team.\n\nNote that searches can match in the file's text (`content_matches`),\nthe path (`path_matches`), or both.\n\nYou can use the same syntax for the search query as in the UI.\nE.g. to search for \"foo\" only within the repository \"demo\",\nuse the query parameter `search_query=foo+repo:demo`.\n\nSimilar to other APIs, you can request more fields using a\n`fields` query parameter. E.g. to get some more information about\nthe repository of matched files, use the query parameter\n`search_query=foo&fields=%2Bvalues.file.commit.repository`\n(the `%2B` is a URL-encoded `+`).\n\nTry `fields=%2Bvalues.*.*.*.*` to get an idea what's possible.\n",
+        "description": "This API will be deprecated on November 1, 2026.\n\nSearch for code in the repositories of the specified team.\n\nNote that searches can match in the file's text (`content_matches`),\nthe path (`path_matches`), or both.\n\nYou can use the same syntax for the search query as in the UI.\nE.g. to search for \"foo\" only within the repository \"demo\",\nuse the query parameter `search_query=foo+repo:demo`.\n\nSimilar to other APIs, you can request more fields using a\n`fields` query parameter. E.g. to get some more information about\nthe repository of matched files, use the query parameter\n`search_query=foo&fields=%2Bvalues.file.commit.repository`\n(the `%2B` is a URL-encoded `+`).\n\nTry `fields=%2Bvalues.*.*.*.*` to get an idea what's possible.\n",
         "operationId": "searchTeam",
         "parameters": [
           {
@@ -24440,8 +24682,9 @@
         "tags": [
           "Search"
         ],
+        "deprecated": true,
         "summary": "Search for code in a user's repositories",
-        "description": "Search for code in the repositories of the specified user.\n\nNote that searches can match in the file's text (`content_matches`),\nthe path (`path_matches`), or both.\n\nYou can use the same syntax for the search query as in the UI.\nE.g. to search for \"foo\" only within the repository \"demo\",\nuse the query parameter `search_query=foo+repo:demo`.\n\nSimilar to other APIs, you can request more fields using a\n`fields` query parameter. E.g. to get some more information about\nthe repository of matched files, use the query parameter\n`search_query=foo&fields=%2Bvalues.file.commit.repository`\n(the `%2B` is a URL-encoded `+`).\n",
+        "description": "This API will be deprecated on November 1, 2026.\n\nSearch for code in the repositories of the specified user.\n\nNote that searches can match in the file's text (`content_matches`),\nthe path (`path_matches`), or both.\n\nYou can use the same syntax for the search query as in the UI.\nE.g. to search for \"foo\" only within the repository \"demo\",\nuse the query parameter `search_query=foo+repo:demo`.\n\nSimilar to other APIs, you can request more fields using a\n`fields` query parameter. E.g. to get some more information about\nthe repository of matched files, use the query parameter\n`search_query=foo&fields=%2Bvalues.file.commit.repository`\n(the `%2B` is a URL-encoded `+`).\n",
         "operationId": "searchAccount",
         "parameters": [
           {
@@ -29707,8 +29950,9 @@
         "tags": [
           "Search"
         ],
+        "deprecated": true,
         "summary": "Search for code in a workspace",
-        "description": "Search for code in the repositories of the specified workspace.\n\nNote that searches can match in the file's text (`content_matches`),\nthe path (`path_matches`), or both.\n\nYou can use the same syntax for the search query as in the UI.\nE.g. to search for \"foo\" only within the repository \"demo\",\nuse the query parameter `search_query=foo+repo:demo`.\n\nSimilar to other APIs, you can request more fields using a\n`fields` query parameter. E.g. to get some more information about\nthe repository of matched files, use the query parameter\n`search_query=foo&fields=%2Bvalues.file.commit.repository`\n(the `%2B` is a URL-encoded `+`).\n\nTry `fields=%2Bvalues.*.*.*.*` to get an idea what's possible.\n",
+        "description": "This API will be deprecated on November 1, 2026.\n\nSearch for code in the repositories of the specified workspace.\n\nNote that searches can match in the file's text (`content_matches`),\nthe path (`path_matches`), or both.\n\nYou can use the same syntax for the search query as in the UI.\nE.g. to search for \"foo\" only within the repository \"demo\",\nuse the query parameter `search_query=foo+repo:demo`.\n\nSimilar to other APIs, you can request more fields using a\n`fields` query parameter. E.g. to get some more information about\nthe repository of matched files, use the query parameter\n`search_query=foo&fields=%2Bvalues.file.commit.repository`\n(the `%2B` is a URL-encoded `+`).\n\nTry `fields=%2Bvalues.*.*.*.*` to get an idea what's possible.\n",
         "operationId": "searchWorkspace",
         "parameters": [
           {
@@ -30071,7 +30315,7 @@
       "description": "A workspace is where you create repositories, collaborate on\nyour code, and organize different streams of work in your Bitbucket\nCloud account. Workspaces replace the use of teams and users in API\ncalls.\n"
     }
   ],
-  "x-revision": "f63a3d51028f",
+  "x-revision": "b1a26411aaaa",
   "x-atlassian-narrative": {
     "documents": [
       {
@@ -30247,13 +30491,13 @@
               "runner:write": "Access and edit your workspaces/repositories' runners",
               "test": "Access your workspaces/repositories' test",
               "test:write": "Access and edit your workspaces/repositories' test",
-              "pullrequest": "Read your repositories and their pull requests",
-              "pullrequest:write": "Read and modify your repositories and their pull requests",
-              "webhook": "Read and modify your repositories' webhooks",
               "issue": "Read your repositories' issues",
               "issue:write": "Read and modify your repositories' issues",
+              "pullrequest": "Read your repositories and their pull requests",
+              "pullrequest:write": "Read and modify your repositories and their pull requests",
               "snippet": "Read your snippets",
               "snippet:write": "Read and modify your snippets",
+              "webhook": "Read and modify your repositories' webhooks",
               "wiki": "Read and modify your repositories' wikis"
             }
           }
@@ -36285,6 +36529,10 @@
               "queued": {
                 "type": "boolean",
                 "description": "A boolean flag indicating whether the pull request is queued"
+              },
+              "mergeable": {
+                "type": "boolean",
+                "description": "A boolean flag indicating whether the pull request passes all merge checks"
               }
             },
             "additionalProperties": true
@@ -36341,6 +36589,89 @@
             "additionalProperties": false
           }
         ]
+      },
+      "file_conflict": {
+        "type": "object",
+        "title": "File Conflict",
+        "description": "A file conflict object.",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "delete_modify",
+              "modify_delete",
+              "content",
+              "binary",
+              "flags",
+              "mode",
+              "type",
+              "symlink",
+              "directory_file",
+              "file_directory",
+              "add_rename",
+              "rename_add",
+              "delete_rename",
+              "rename_delete",
+              "rename",
+              "subrepo",
+              "unknown"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      "paginated_file_conflicts": {
+        "type": "object",
+        "title": "Paginated File Conflicts",
+        "description": "A paginated list of file conflicts.",
+        "properties": {
+          "size": {
+            "type": "integer",
+            "description": "Total number of objects in the response. This is an optional element that is not provided in all responses, as it can be expensive to compute.",
+            "minimum": 0
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number of the current results. This is an optional element that is not provided in all responses.",
+            "minimum": 1
+          },
+          "pagelen": {
+            "type": "integer",
+            "description": "Current number of objects on the existing page. The default value is 10 with 100 being the maximum allowed value. Individual APIs may enforce different values.",
+            "minimum": 1
+          },
+          "next": {
+            "type": "string",
+            "description": "Link to the next page if it exists. The last page of a collection does not have this value. Use this link to navigate the result set and refrain from constructing your own URLs.",
+            "format": "uri"
+          },
+          "previous": {
+            "type": "string",
+            "description": "Link to previous page if it exists. A collections first page does not have this value. This is an optional element that is not provided in all responses. Some result sets strictly support forward navigation and never provide previous links. Clients must anticipate that backwards navigation is not always available. Use this link to navigate the result set and refrain from constructing your own URLs.",
+            "format": "uri"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/file_conflict"
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
       },
       "author": {
         "allOf": [
@@ -37169,10 +37500,6 @@
               "parent_fingerprint": {
                 "type": "string",
                 "description": "The fingerprint of the parent key. This value is null unless the current key is a subkey."
-              },
-              "comment": {
-                "type": "string",
-                "description": "The comment parsed from the GPG key (if present)"
               },
               "name": {
                 "type": "string",

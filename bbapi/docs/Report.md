@@ -16,8 +16,8 @@ Name | Type | Description | Notes
 **report_type** | Option<**ReportType**> | The type of the report. (enum: SECURITY, COVERAGE, TEST, BUG) | [optional]
 **result** | Option<**Result**> | The state of the report. May be set to PENDING and later updated. (enum: PASSED, FAILED, PENDING) | [optional]
 **data** | Option<[**Vec<models::ReportData>**](ReportData.md)> | An array of data fields to display information on the report. Maximum 10. | [optional]
-**created_on** | Option<**String**> | The timestamp when the report was created. | [optional]
-**updated_on** | Option<**String**> | The timestamp when the report was updated. | [optional]
+**created_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> | The timestamp when the report was created. | [optional]
+**updated_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> | The timestamp when the report was updated. | [optional]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

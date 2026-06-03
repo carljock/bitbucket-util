@@ -15,6 +15,16 @@ use crate::{apis::ResponseContent, models};
 use super::{Error, configuration, ContentType};
 
 
+/// struct for typed errors of method [`addon_addon_key_client_key_get`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AddonAddonKeyClientKeyGetError {
+    Status401(models::Error),
+    Status403(models::Error),
+    Status404(models::Error),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`addon_delete`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -107,6 +117,46 @@ pub enum AddonPutError {
     UnknownValue(serde_json::Value),
 }
 
+
+/// Get the client key of the Connect addon associated with a Forge app install via forgeAppId linkage.  This endpoint is part of the Connect -> Forge migration tooling. It is intended to be used by a Forge app using `asApp().requestBitbucket()` only. Prerequisite: app developer needs to register the linkage between their Connect and Forge app by setting `forgeAppId` in the Connect addon descriptor to `app.id` from Forge app manifest, then update the installations. If the request came from an installation of a registered Forge app, the client key of the linked Connect addon installed in the same workspace will be returned.  ``` api.asApp().requestBitbucket(route`/2.0/addon/{addon-key}/client-key`) ```
+pub async fn addon_addon_key_client_key_get(configuration: &configuration::Configuration, addon_key: &str) -> Result<(), Error<AddonAddonKeyClientKeyGetError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_addon_key = addon_key;
+
+    let uri_str = format!("{}/addon/{addon_key}/client-key", configuration.base_path, addon_key=crate::apis::urlencode(p_path_addon_key));
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("Authorization", value);
+    };
+    if let Some(ref token) = configuration.oauth_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    if let Some(ref auth_conf) = configuration.basic_auth {
+        req_builder = req_builder.basic_auth(auth_conf.0.to_owned(), auth_conf.1.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<AddonAddonKeyClientKeyGetError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
 
 /// Deletes the application for the user.  This endpoint is intended to be used by Bitbucket Connect apps and only supports JWT authentication -- that is how Bitbucket identifies the particular installation of the app. Developers with applications registered in the \"Develop Apps\" section of Bitbucket Marketplace need not use this endpoint as updates for those applications can be sent out via the UI of that section.  ``` $ curl -X DELETE https://api.bitbucket.org/2.0/addon \\   -H \"Authorization: JWT <JWT Token>\" ```
 pub async fn addon_delete(configuration: &configuration::Configuration, ) -> Result<(), Error<AddonDeleteError>> {

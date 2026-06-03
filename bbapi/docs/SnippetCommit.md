@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **r#type** | Option<**String**> |  | [optional]
 **hash** | Option<**String**> |  | [optional]
-**date** | Option<**String**> |  | [optional]
+**date** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
 **author** | Option<[**models::Author**](Author.md)> |  | [optional]
 **committer** | Option<[**models::Committer**](Committer.md)> |  | [optional]
 **message** | Option<**String**> |  | [optional]

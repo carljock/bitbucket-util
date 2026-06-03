@@ -24,6 +24,7 @@ Method | HTTP request | Description
 [**repositories_workspace_repo_slug_pullrequests_pull_request_id_comments_get**](PullrequestsApi.md#repositories_workspace_repo_slug_pullrequests_pull_request_id_comments_get) | **GET** /repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/comments | List comments on a pull request
 [**repositories_workspace_repo_slug_pullrequests_pull_request_id_comments_post**](PullrequestsApi.md#repositories_workspace_repo_slug_pullrequests_pull_request_id_comments_post) | **POST** /repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/comments | Create a comment on a pull request
 [**repositories_workspace_repo_slug_pullrequests_pull_request_id_commits_get**](PullrequestsApi.md#repositories_workspace_repo_slug_pullrequests_pull_request_id_commits_get) | **GET** /repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/commits | List commits on a pull request
+[**repositories_workspace_repo_slug_pullrequests_pull_request_id_conflicts_get**](PullrequestsApi.md#repositories_workspace_repo_slug_pullrequests_pull_request_id_conflicts_get) | **GET** /repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/conflicts | Get file conflicts for a pull request
 [**repositories_workspace_repo_slug_pullrequests_pull_request_id_decline_post**](PullrequestsApi.md#repositories_workspace_repo_slug_pullrequests_pull_request_id_decline_post) | **POST** /repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/decline | Decline a pull request
 [**repositories_workspace_repo_slug_pullrequests_pull_request_id_diff_get**](PullrequestsApi.md#repositories_workspace_repo_slug_pullrequests_pull_request_id_diff_get) | **GET** /repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/diff | List changes in a pull request
 [**repositories_workspace_repo_slug_pullrequests_pull_request_id_diffstat_get**](PullrequestsApi.md#repositories_workspace_repo_slug_pullrequests_pull_request_id_diffstat_get) | **GET** /repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/diffstat | Get the diff stat for a pull request
@@ -686,6 +687,38 @@ Name | Type | Description  | Required | Notes
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+
+## repositories_workspace_repo_slug_pullrequests_pull_request_id_conflicts_get
+
+> repositories_workspace_repo_slug_pullrequests_pull_request_id_conflicts_get(pull_request_id, repo_slug, workspace)
+Get file conflicts for a pull request
+
+Redirects to the [repository file conflicts](/cloud/bitbucket/rest/api-group-commits/#api-repositories-workspace-repo-slug-file-conflicts-spec-get) with the revspec that corresponds to the pull request.
+
+### Parameters
+
+
+Name | Type | Description  | Required | Notes
+------------- | ------------- | ------------- | ------------- | -------------
+**pull_request_id** | **i32** | The id of the pull request. | [required] |
+**repo_slug** | **String** | This can either be the repository slug or the UUID of the repository, surrounded by curly-braces, for example: `{repository UUID}`.  | [required] |
+**workspace** | **String** | This can either be the workspace ID (slug) or the workspace UUID surrounded by curly-braces, for example: `{workspace UUID}`.  | [required] |
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[api_key](../README.md#api_key), [oauth2](../README.md#oauth2), [basic](../README.md#basic)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: Not defined
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

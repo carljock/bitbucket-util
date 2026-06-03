@@ -21,7 +21,7 @@ pub struct IssueChange {
     #[serde(rename = "name", skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "user", skip_serializing_if = "Option::is_none")]
     pub user: Option<Box<models::Account>>,
     #[serde(rename = "issue", skip_serializing_if = "Option::is_none")]

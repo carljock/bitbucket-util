@@ -6,8 +6,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **r#type** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> | The UUID identifying the step. | [optional]
-**started_on** | Option<**String**> | The timestamp when the step execution was started. This is not set when the step hasn't executed yet. | [optional]
-**completed_on** | Option<**String**> | The timestamp when the step execution was completed. This is not set if the step is still in progress. | [optional]
+**started_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> | The timestamp when the step execution was started. This is not set when the step hasn't executed yet. | [optional]
+**completed_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> | The timestamp when the step execution was completed. This is not set if the step is still in progress. | [optional]
 **state** | Option<[**models::PipelineStepState**](PipelineStepState.md)> |  | [optional]
 **image** | Option<[**models::PipelineImage**](PipelineImage.md)> |  | [optional]
 **setup_commands** | Option<[**Vec<models::PipelineCommand>**](PipelineCommand.md)> | The list of commands that are executed as part of the setup phase of the build. These commands are executed outside the build container. | [optional]

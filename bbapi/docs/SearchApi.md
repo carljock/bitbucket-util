@@ -15,7 +15,7 @@ Method | HTTP request | Description
 > models::SearchResultPage search_account(selected_user, search_query, page, pagelen)
 Search for code in a user's repositories
 
-Search for code in the repositories of the specified user.  Note that searches can match in the file's text (`content_matches`), the path (`path_matches`), or both.  You can use the same syntax for the search query as in the UI. E.g. to search for \"foo\" only within the repository \"demo\", use the query parameter `search_query=foo+repo:demo`.  Similar to other APIs, you can request more fields using a `fields` query parameter. E.g. to get some more information about the repository of matched files, use the query parameter `search_query=foo&fields=%2Bvalues.file.commit.repository` (the `%2B` is a URL-encoded `+`). 
+This API will be deprecated on November 1, 2026.  Search for code in the repositories of the specified user.  Note that searches can match in the file's text (`content_matches`), the path (`path_matches`), or both.  You can use the same syntax for the search query as in the UI. E.g. to search for \"foo\" only within the repository \"demo\", use the query parameter `search_query=foo+repo:demo`.  Similar to other APIs, you can request more fields using a `fields` query parameter. E.g. to get some more information about the repository of matched files, use the query parameter `search_query=foo&fields=%2Bvalues.file.commit.repository` (the `%2B` is a URL-encoded `+`). 
 
 ### Parameters
 
@@ -48,7 +48,7 @@ Name | Type | Description  | Required | Notes
 > models::SearchResultPage search_team(username, search_query, page, pagelen)
 Search for code in a team's repositories
 
-Search for code in the repositories of the specified team.  Note that searches can match in the file's text (`content_matches`), the path (`path_matches`), or both.  You can use the same syntax for the search query as in the UI. E.g. to search for \"foo\" only within the repository \"demo\", use the query parameter `search_query=foo+repo:demo`.  Similar to other APIs, you can request more fields using a `fields` query parameter. E.g. to get some more information about the repository of matched files, use the query parameter `search_query=foo&fields=%2Bvalues.file.commit.repository` (the `%2B` is a URL-encoded `+`).  Try `fields=%2Bvalues.*.*.*.*` to get an idea what's possible. 
+This API will be deprecated on November 1, 2026.  Search for code in the repositories of the specified team.  Note that searches can match in the file's text (`content_matches`), the path (`path_matches`), or both.  You can use the same syntax for the search query as in the UI. E.g. to search for \"foo\" only within the repository \"demo\", use the query parameter `search_query=foo+repo:demo`.  Similar to other APIs, you can request more fields using a `fields` query parameter. E.g. to get some more information about the repository of matched files, use the query parameter `search_query=foo&fields=%2Bvalues.file.commit.repository` (the `%2B` is a URL-encoded `+`).  Try `fields=%2Bvalues.*.*.*.*` to get an idea what's possible. 
 
 ### Parameters
 
@@ -81,7 +81,7 @@ Name | Type | Description  | Required | Notes
 > models::SearchResultPage search_workspace(workspace, search_query, page, pagelen)
 Search for code in a workspace
 
-Search for code in the repositories of the specified workspace.  Note that searches can match in the file's text (`content_matches`), the path (`path_matches`), or both.  You can use the same syntax for the search query as in the UI. E.g. to search for \"foo\" only within the repository \"demo\", use the query parameter `search_query=foo+repo:demo`.  Similar to other APIs, you can request more fields using a `fields` query parameter. E.g. to get some more information about the repository of matched files, use the query parameter `search_query=foo&fields=%2Bvalues.file.commit.repository` (the `%2B` is a URL-encoded `+`).  Try `fields=%2Bvalues.*.*.*.*` to get an idea what's possible. 
+This API will be deprecated on November 1, 2026.  Search for code in the repositories of the specified workspace.  Note that searches can match in the file's text (`content_matches`), the path (`path_matches`), or both.  You can use the same syntax for the search query as in the UI. E.g. to search for \"foo\" only within the repository \"demo\", use the query parameter `search_query=foo+repo:demo`.  Similar to other APIs, you can request more fields using a `fields` query parameter. E.g. to get some more information about the repository of matched files, use the query parameter `search_query=foo&fields=%2Bvalues.file.commit.repository` (the `%2B` is a URL-encoded `+`).  Try `fields=%2Bvalues.*.*.*.*` to get an idea what's possible. 
 
 ### Parameters
 

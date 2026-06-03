@@ -22,7 +22,7 @@ pub struct PipelineRunnerState {
     pub version: Option<Box<models::PipelineRunnerVersion>>,
     /// The timestamp when the runner state was last updated.
     #[serde(rename = "updated_on", skip_serializing_if = "Option::is_none")]
-    pub updated_on: Option<String>,
+    pub updated_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// Whether the runner is cordoned (prevented from accepting new steps).
     #[serde(rename = "cordoned", skip_serializing_if = "Option::is_none")]
     pub cordoned: Option<bool>,

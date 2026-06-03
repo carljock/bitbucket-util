@@ -25,7 +25,7 @@ pub struct Participant {
     pub state: Option<Option<State>>,
     /// The ISO8601 timestamp of the participant's action. For approvers, this is the time of their approval. For commenters and pull request reviewers who are not approvers, this is the time they last commented, or null if they have not commented.
     #[serde(rename = "participated_on", skip_serializing_if = "Option::is_none")]
-    pub participated_on: Option<String>,
+    pub participated_on: Option<chrono::DateTime<chrono::FixedOffset>>,
 }
 
 impl Participant {

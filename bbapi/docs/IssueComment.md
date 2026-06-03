@@ -6,8 +6,8 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **r#type** | Option<**String**> |  | [optional]
 **id** | Option<**i64**> |  | [optional]
-**created_on** | Option<**String**> |  | [optional]
-**updated_on** | Option<**String**> |  | [optional]
+**created_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
+**updated_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
 **content** | Option<[**models::CommentContent**](CommentContent.md)> |  | [optional]
 **user** | Option<[**models::Account**](Account.md)> |  | [optional]
 **deleted** | Option<**bool**> |  | [optional]

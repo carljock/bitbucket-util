@@ -18,7 +18,7 @@ pub struct Commit {
     #[serde(rename = "hash", skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,
     #[serde(rename = "date", skip_serializing_if = "Option::is_none")]
-    pub date: Option<String>,
+    pub date: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "author", skip_serializing_if = "Option::is_none")]
     pub author: Option<Box<models::Author>>,
     #[serde(rename = "committer", skip_serializing_if = "Option::is_none")]

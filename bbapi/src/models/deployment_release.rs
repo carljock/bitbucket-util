@@ -28,7 +28,7 @@ pub struct DeploymentRelease {
     pub commit: Option<Box<models::Commit>>,
     /// The timestamp when the release was created.
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
 }
 
 impl DeploymentRelease {

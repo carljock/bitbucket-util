@@ -20,7 +20,7 @@ pub struct CommentResolution {
     pub user: Option<Box<models::Account>>,
     /// The ISO8601 timestamp the resolution was created.
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
 }
 
 impl CommentResolution {

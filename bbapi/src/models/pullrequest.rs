@@ -54,10 +54,10 @@ pub struct Pullrequest {
     pub reason: Option<String>,
     /// The ISO8601 timestamp the request was created.
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The ISO8601 timestamp the request was last updated.
     #[serde(rename = "updated_on", skip_serializing_if = "Option::is_none")]
-    pub updated_on: Option<String>,
+    pub updated_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The list of users that were added as reviewers on this pull request when it was created. For performance reasons, the API only includes this list on a pull request's `self` URL.
     #[serde(rename = "reviewers", skip_serializing_if = "Option::is_none")]
     pub reviewers: Option<Vec<models::Account>>,
@@ -70,6 +70,9 @@ pub struct Pullrequest {
     /// A boolean flag indicating whether the pull request is queued
     #[serde(rename = "queued", skip_serializing_if = "Option::is_none")]
     pub queued: Option<bool>,
+    /// A boolean flag indicating whether the pull request passes all merge checks
+    #[serde(rename = "mergeable", skip_serializing_if = "Option::is_none")]
+    pub mergeable: Option<bool>,
 }
 
 impl Pullrequest {
@@ -97,6 +100,7 @@ impl Pullrequest {
             participants: None,
             draft: None,
             queued: None,
+            mergeable: None,
         }
     }
 }

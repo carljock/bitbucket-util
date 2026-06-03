@@ -195,6 +195,13 @@ pub enum RepositoriesWorkspaceRepoSlugPullrequestsPullRequestIdCommitsGetError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`repositories_workspace_repo_slug_pullrequests_pull_request_id_conflicts_get`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RepositoriesWorkspaceRepoSlugPullrequestsPullRequestIdConflictsGetError {
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`repositories_workspace_repo_slug_pullrequests_pull_request_id_decline_post`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -1345,6 +1352,48 @@ pub async fn repositories_workspace_repo_slug_pullrequests_pull_request_id_commi
     } else {
         let content = resp.text().await?;
         let entity: Option<RepositoriesWorkspaceRepoSlugPullrequestsPullRequestIdCommitsGetError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
+/// Redirects to the [repository file conflicts](/cloud/bitbucket/rest/api-group-commits/#api-repositories-workspace-repo-slug-file-conflicts-spec-get) with the revspec that corresponds to the pull request.
+pub async fn repositories_workspace_repo_slug_pullrequests_pull_request_id_conflicts_get(configuration: &configuration::Configuration, pull_request_id: i32, repo_slug: &str, workspace: &str) -> Result<(), Error<RepositoriesWorkspaceRepoSlugPullrequestsPullRequestIdConflictsGetError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_pull_request_id = pull_request_id;
+    let p_path_repo_slug = repo_slug;
+    let p_path_workspace = workspace;
+
+    let uri_str = format!("{}/repositories/{workspace}/{repo_slug}/pullrequests/{pull_request_id}/conflicts", configuration.base_path, pull_request_id=p_path_pull_request_id, repo_slug=crate::apis::urlencode(p_path_repo_slug), workspace=crate::apis::urlencode(p_path_workspace));
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("Authorization", value);
+    };
+    if let Some(ref token) = configuration.oauth_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    if let Some(ref auth_conf) = configuration.basic_auth {
+        req_builder = req_builder.basic_auth(auth_conf.0.to_owned(), auth_conf.1.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+
+    if !status.is_client_error() && !status.is_server_error() {
+        Ok(())
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<RepositoriesWorkspaceRepoSlugPullrequestsPullRequestIdConflictsGetError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent { status, content, entity }))
     }
 }

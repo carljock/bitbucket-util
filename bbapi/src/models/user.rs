@@ -18,7 +18,7 @@ pub struct User {
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::UserLinks>>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "display_name", skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
     #[serde(rename = "uuid", skip_serializing_if = "Option::is_none")]

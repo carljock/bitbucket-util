@@ -36,9 +36,9 @@ pub struct Repository {
     #[serde(rename = "description", skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "updated_on", skip_serializing_if = "Option::is_none")]
-    pub updated_on: Option<String>,
+    pub updated_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "size", skip_serializing_if = "Option::is_none")]
     pub size: Option<i32>,
     #[serde(rename = "language", skip_serializing_if = "Option::is_none")]

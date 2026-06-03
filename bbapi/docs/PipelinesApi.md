@@ -1324,7 +1324,7 @@ Name | Type | Description  | Required | Notes
 **target_commit_hash** | Option<**String**> | The revision to filter by. |  |
 **target_selector_pattern** | Option<**String**> | The pipeline pattern to filter by. |  |
 **target_selector_type** | Option<**String**> | The type of pipeline to filter by. |  |
-**created_on** | Option<**String**> | The creation date to filter by. |  |
+**created_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> | The creation date to filter by. |  |
 **trigger_type** | Option<**String**> | The trigger type to filter by. |  |
 **status** | Option<**String**> | The pipeline status to filter by. |  |
 **sort** | Option<**String**> | The attribute name to sort on. |  |

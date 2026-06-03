@@ -27,9 +27,9 @@ pub struct ProjectDeployKey {
     #[serde(rename = "label", skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(rename = "added_on", skip_serializing_if = "Option::is_none")]
-    pub added_on: Option<String>,
+    pub added_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "last_used", skip_serializing_if = "Option::is_none")]
-    pub last_used: Option<String>,
+    pub last_used: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "links", skip_serializing_if = "Option::is_none")]
     pub links: Option<Box<models::BranchingModelSettingsLinks>>,
     #[serde(rename = "created_by", skip_serializing_if = "Option::is_none")]

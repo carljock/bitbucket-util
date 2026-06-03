@@ -32,7 +32,7 @@ pub struct WebhookSubscription {
     #[serde(rename = "active", skip_serializing_if = "Option::is_none")]
     pub active: Option<bool>,
     #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<String>,
+    pub created_at: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The events this webhook is subscribed to.
     #[serde(rename = "events", skip_serializing_if = "Option::is_none")]
     pub events: Option<std::collections::HashSet<Events>>,

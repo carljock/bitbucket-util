@@ -23,9 +23,9 @@ pub struct Snippet {
     #[serde(rename = "scm", skip_serializing_if = "Option::is_none")]
     pub scm: Option<Scm>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "updated_on", skip_serializing_if = "Option::is_none")]
-    pub updated_on: Option<String>,
+    pub updated_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "owner", skip_serializing_if = "Option::is_none")]
     pub owner: Option<Box<models::Account>>,
     #[serde(rename = "creator", skip_serializing_if = "Option::is_none")]

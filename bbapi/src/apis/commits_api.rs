@@ -193,6 +193,14 @@ pub enum RepositoriesWorkspaceRepoSlugDiffstatSpecGetError {
     UnknownValue(serde_json::Value),
 }
 
+/// struct for typed errors of method [`repositories_workspace_repo_slug_file_conflicts_spec_get`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RepositoriesWorkspaceRepoSlugFileConflictsSpecGetError {
+    Status404(models::Error),
+    UnknownValue(serde_json::Value),
+}
+
 /// struct for typed errors of method [`repositories_workspace_repo_slug_merge_base_revspec_get`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -1428,6 +1436,59 @@ pub async fn repositories_workspace_repo_slug_diffstat_spec_get(configuration: &
     } else {
         let content = resp.text().await?;
         let entity: Option<RepositoriesWorkspaceRepoSlugDiffstatSpecGetError> = serde_json::from_str(&content).ok();
+        Err(Error::ResponseError(ResponseContent { status, content, entity }))
+    }
+}
+
+/// Get file conflicts for a commit spec
+pub async fn repositories_workspace_repo_slug_file_conflicts_spec_get(configuration: &configuration::Configuration, repo_slug: &str, spec: &str, workspace: &str) -> Result<models::PaginatedFileConflicts, Error<RepositoriesWorkspaceRepoSlugFileConflictsSpecGetError>> {
+    // add a prefix to parameters to efficiently prevent name collisions
+    let p_path_repo_slug = repo_slug;
+    let p_path_spec = spec;
+    let p_path_workspace = workspace;
+
+    let uri_str = format!("{}/repositories/{workspace}/{repo_slug}/file-conflicts/{spec}", configuration.base_path, repo_slug=crate::apis::urlencode(p_path_repo_slug), spec=crate::apis::urlencode(p_path_spec), workspace=crate::apis::urlencode(p_path_workspace));
+    let mut req_builder = configuration.client.request(reqwest::Method::GET, &uri_str);
+
+    if let Some(ref user_agent) = configuration.user_agent {
+        req_builder = req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
+    }
+    if let Some(ref apikey) = configuration.api_key {
+        let key = apikey.key.clone();
+        let value = match apikey.prefix {
+            Some(ref prefix) => format!("{} {}", prefix, key),
+            None => key,
+        };
+        req_builder = req_builder.header("Authorization", value);
+    };
+    if let Some(ref token) = configuration.oauth_access_token {
+        req_builder = req_builder.bearer_auth(token.to_owned());
+    };
+    if let Some(ref auth_conf) = configuration.basic_auth {
+        req_builder = req_builder.basic_auth(auth_conf.0.to_owned(), auth_conf.1.to_owned());
+    };
+
+    let req = req_builder.build()?;
+    let resp = configuration.client.execute(req).await?;
+
+    let status = resp.status();
+    let content_type = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("application/octet-stream");
+    let content_type = super::ContentType::from(content_type);
+
+    if !status.is_client_error() && !status.is_server_error() {
+        let content = resp.text().await?;
+        match content_type {
+            ContentType::Json => serde_json::from_str(&content).map_err(Error::from),
+            ContentType::Text => return Err(Error::from(serde_json::Error::custom("Received `text/plain` content type response that cannot be converted to `models::PaginatedFileConflicts`"))),
+            ContentType::Unsupported(unknown_type) => return Err(Error::from(serde_json::Error::custom(format!("Received `{unknown_type}` content type response that cannot be converted to `models::PaginatedFileConflicts`")))),
+        }
+    } else {
+        let content = resp.text().await?;
+        let entity: Option<RepositoriesWorkspaceRepoSlugFileConflictsSpecGetError> = serde_json::from_str(&content).ok();
         Err(Error::ResponseError(ResponseContent { status, content, entity }))
     }
 }

@@ -28,11 +28,11 @@ pub struct Issue {
     #[serde(rename = "assignee", skip_serializing_if = "Option::is_none")]
     pub assignee: Option<Box<models::Account>>,
     #[serde(rename = "created_on", skip_serializing_if = "Option::is_none")]
-    pub created_on: Option<String>,
+    pub created_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "updated_on", skip_serializing_if = "Option::is_none")]
-    pub updated_on: Option<String>,
+    pub updated_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "edited_on", skip_serializing_if = "Option::is_none")]
-    pub edited_on: Option<String>,
+    pub edited_on: Option<chrono::DateTime<chrono::FixedOffset>>,
     #[serde(rename = "state", skip_serializing_if = "Option::is_none")]
     pub state: Option<State>,
     #[serde(rename = "kind", skip_serializing_if = "Option::is_none")]

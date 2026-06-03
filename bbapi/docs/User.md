@@ -6,7 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **r#type** | Option<**String**> |  | [optional]
 **links** | Option<[**models::UserLinks**](UserLinks.md)> |  | [optional]
-**created_on** | Option<**String**> |  | [optional]
+**created_on** | Option<**chrono::DateTime<chrono::FixedOffset>**> |  | [optional]
 **display_name** | Option<**String**> |  | [optional]
 **uuid** | Option<**String**> |  | [optional]
 **account_id** | Option<**String**> | The user's Atlassian account ID. | [optional]
