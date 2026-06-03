@@ -443,7 +443,7 @@ impl BitbucketClient {
         selector_pattern: Option<&str>,
         variables: Option<Vec<(String, String, bool)>>,
     ) -> Result<crate::model::PipelineDetailedRow, BbcliError> {
-        // Build the request as JSON with proper discriminated union structure
+        // Build the request JSON with proper discriminated union structure
         let mut target_json = serde_json::json!({
             "type": "pipeline_ref_target",
             "ref_type": ref_type,
@@ -468,6 +468,15 @@ impl BitbucketClient {
             target_json["selector"] = selector_obj;
         }
 
+        // Deserialize to PipelineRefTarget to validate the structure
+        let _target: models::PipelineRefTarget = serde_json::from_value(target_json.clone())
+            .map_err(|e| BbcliError::Parse {
+                context: "parse pipeline ref target",
+                message: e.to_string(),
+            })?;
+
+        // Now build the Pipeline request with the JSON target
+        // (We'll send raw JSON instead of using SDK structures for now)
         let mut pipeline_json = serde_json::json!({
             "type": "pipeline",
             "target": target_json,
@@ -487,7 +496,7 @@ impl BitbucketClient {
             pipeline_json["variables"] = serde_json::Value::Array(vars_json);
         }
 
-        // Send the request directly with raw JSON to preserve discriminated union structure
+        // Send the request directly with raw JSON
         let uri = format!(
             "{}/repositories/{}/{}/pipelines",
             self.config.base_path,
@@ -908,15 +917,25 @@ fn pipeline_to_row(pipeline: models::Pipeline) -> Option<crate::model::PipelineR
             if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
                 serde_json::to_value(target).ok()?,
             ) {
-                Some((
-                    pipeline_ref_target.ref_name,
-                    pipeline_ref_target.ref_type.map(|rt| match rt {
-                        models::pipeline_ref_target::RefType::Branch => "branch",
-                        models::pipeline_ref_target::RefType::Tag => "tag",
-                        models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
-                        models::pipeline_ref_target::RefType::Bookmark => "bookmark",
-                    }),
-                ))
+                // Match on the enum variant to extract fields
+                match pipeline_ref_target {
+                    models::PipelineRefTarget::PipelineRefTarget {
+                        ref_name,
+                        ref_type,
+                        ..
+                    } => {
+                        Some((
+                            ref_name,
+                            ref_type.map(|rt| match rt {
+                                models::pipeline_ref_target::RefType::Branch => "branch",
+                                models::pipeline_ref_target::RefType::Tag => "tag",
+                                models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
+                                models::pipeline_ref_target::RefType::Bookmark => "bookmark",
+                            }),
+                        ))
+                    }
+                    _ => None,
+                }
             } else {
                 None
             }
@@ -962,15 +981,25 @@ fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::Pipelin
             if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
                 serde_json::to_value(target).ok()?,
             ) {
-                Some((
-                    pipeline_ref_target.ref_name,
-                    pipeline_ref_target.ref_type.map(|rt| match rt {
-                        models::pipeline_ref_target::RefType::Branch => "branch",
-                        models::pipeline_ref_target::RefType::Tag => "tag",
-                        models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
-                        models::pipeline_ref_target::RefType::Bookmark => "bookmark",
-                    }),
-                ))
+                // Match on the enum variant to extract fields
+                match pipeline_ref_target {
+                    models::PipelineRefTarget::PipelineRefTarget {
+                        ref_name,
+                        ref_type,
+                        ..
+                    } => {
+                        Some((
+                            ref_name,
+                            ref_type.map(|rt| match rt {
+                                models::pipeline_ref_target::RefType::Branch => "branch",
+                                models::pipeline_ref_target::RefType::Tag => "tag",
+                                models::pipeline_ref_target::RefType::NamedBranch => "named_branch",
+                                models::pipeline_ref_target::RefType::Bookmark => "bookmark",
+                            }),
+                        ))
+                    }
+                    _ => None,
+                }
             } else {
                 None
             }
@@ -994,9 +1023,12 @@ fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::Pipelin
             if let Ok(pipeline_ref_target) = serde_json::from_value::<models::PipelineRefTarget>(
                 serde_json::to_value(target).ok()?,
             ) {
-                pipeline_ref_target
-                    .commit
-                    .and_then(|commit| commit.hash)
+                match pipeline_ref_target {
+                    models::PipelineRefTarget::PipelineRefTarget { commit, .. } => {
+                        commit.and_then(|c| c.hash)
+                    }
+                    _ => None,
+                }
             } else {
                 None
             }

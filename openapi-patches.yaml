@@ -49,3 +49,25 @@ patches:
     mapping:
       "pipeline_ref_target": "#/components/schemas/pipeline_ref_target"
       "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
+
+  - name: "Flatten pipeline_ref_target schema"
+    reason: |
+      The pipeline_ref_target uses allOf inheritance from pipeline_target,
+      which causes the Rust code generator to create enum variants without
+      fields. Flattening the schema to explicitly include all properties
+      (ref_type, ref_name, commit, selector) allows the generator to include
+      these fields in the enum variant, making it usable for serialization.
+
+      This enables using the SDK's create_pipeline_for_repository method
+      directly instead of bypassing with raw HTTP requests.
+    type: "flatten_schema"
+    schema: "pipeline_ref_target"
+    baseSchema: "pipeline_target"
+
+  - name: "Flatten pipeline_commit_target schema"
+    reason: |
+      Similar to pipeline_ref_target, flatten pipeline_commit_target to
+      include all properties (commit, selector) in the enum variant.
+    type: "flatten_schema"
+    schema: "pipeline_commit_target"
+    baseSchema: "pipeline_target"

@@ -22,7 +22,7 @@ pub struct PipelineSchedule {
     #[serde(rename = "enabled", skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
     #[serde(rename = "target", skip_serializing_if = "Option::is_none")]
-    pub target: Option<Box<models::PipelineRefTarget>>,
+    pub target: Option<models::PipelineRefTarget>,
     /// The cron expression with second precision (7 fields) that the schedule applies. For example, for expression: 0 0 12 * * ? *, will execute at 12pm UTC every day.
     #[serde(rename = "cron_pattern", skip_serializing_if = "Option::is_none")]
     pub cron_pattern: Option<String>,

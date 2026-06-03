@@ -11,23 +11,33 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PipelineCommitTarget {
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<String>,
-    #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
-    pub commit: Option<Box<models::Commit>>,
-    #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
-    pub selector: Option<Box<models::PipelineSelector>>,
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum PipelineCommitTarget {
+    #[serde(rename="pipeline_commit_target")]
+    PipelineCommitTarget {
+        #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
+        commit: Option<Box<models::Commit>>,
+        #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
+        selector: Option<Box<models::PipelineSelector>>,
+    },
+    #[serde(rename="pipeline_ref_target")]
+    PipelineRefTarget {
+        #[serde(rename = "commit", skip_serializing_if = "Option::is_none")]
+        commit: Option<Box<models::Commit>>,
+        #[serde(rename = "selector", skip_serializing_if = "Option::is_none")]
+        selector: Option<Box<models::PipelineSelector>>,
+    },
 }
 
-impl PipelineCommitTarget {
-    pub fn new() -> PipelineCommitTarget {
-        PipelineCommitTarget {
-            r#type: None,
-            commit: None,
-            selector: None,
+impl Default for PipelineCommitTarget {
+    fn default() -> Self {
+        Self::PipelineCommitTarget {
+            commit: Default::default(),
+            selector: Default::default(),
         }
+        
     }
 }
+
 

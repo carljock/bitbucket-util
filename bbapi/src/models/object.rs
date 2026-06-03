@@ -126,17 +126,11 @@ pub enum Object {
     #[serde(rename="pipeline_cache")]
     PipelineCache {
     },
-    #[serde(rename="pipeline_commit_target")]
-    PipelineCommitTarget {
-    },
     #[serde(rename="pipeline_error")]
     PipelineError {
     },
     #[serde(rename="pipeline_known_host")]
     PipelineKnownHost {
-    },
-    #[serde(rename="pipeline_ref_target")]
-    PipelineRefTarget {
     },
     #[serde(rename="pipeline_runner")]
     PipelineRunner {

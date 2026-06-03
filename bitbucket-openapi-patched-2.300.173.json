@@ -31480,63 +31480,80 @@
             "description": "A representation of the target that a pipeline executes on.",
             "properties": {}
           }
-        ]
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
+            "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
+          }
+        }
       },
       "pipeline_ref_target": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/pipeline_target"
+        "type": "object",
+        "properties": {
+          "ref_type": {
+            "enum": [
+              "branch",
+              "tag",
+              "named_branch",
+              "bookmark"
+            ],
+            "type": "string",
+            "description": "The type of reference (branch/tag)."
           },
-          {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Pipeline Ref Target",
-            "description": "A Bitbucket Pipelines reference target.",
-            "properties": {
-              "ref_type": {
-                "enum": [
-                  "branch",
-                  "tag",
-                  "named_branch",
-                  "bookmark"
-                ],
-                "type": "string",
-                "description": "The type of reference (branch/tag)."
-              },
-              "ref_name": {
-                "type": "string",
-                "description": "The name of the reference."
-              },
-              "commit": {
-                "$ref": "#/components/schemas/commit"
-              },
-              "selector": {
-                "$ref": "#/components/schemas/pipeline_selector"
-              }
-            }
+          "ref_name": {
+            "type": "string",
+            "description": "The name of the reference."
+          },
+          "commit": {
+            "$ref": "#/components/schemas/commit"
+          },
+          "selector": {
+            "$ref": "#/components/schemas/pipeline_selector"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "pipeline_ref_target"
+            ],
+            "description": "Type discriminator for pipeline_ref_target"
           }
-        ]
+        },
+        "additionalProperties": true,
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
+            "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
+          }
+        }
       },
       "pipeline_commit_target": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/pipeline_target"
+        "type": "object",
+        "properties": {
+          "commit": {
+            "$ref": "#/components/schemas/commit"
           },
-          {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Pipeline Commit Target",
-            "description": "A Bitbucket Pipelines commit target.",
-            "properties": {
-              "commit": {
-                "$ref": "#/components/schemas/commit"
-              },
-              "selector": {
-                "$ref": "#/components/schemas/pipeline_selector"
-              }
-            }
+          "selector": {
+            "$ref": "#/components/schemas/pipeline_selector"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "pipeline_commit_target"
+            ],
+            "description": "Type discriminator for pipeline_commit_target"
           }
-        ]
+        },
+        "additionalProperties": true,
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
+            "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
+          }
+        }
       },
       "pipeline_selector": {
         "allOf": [

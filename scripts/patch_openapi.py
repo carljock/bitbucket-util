@@ -183,6 +183,95 @@ class OpenAPIPatcher:
         )
         return True
 
+    def flatten_schema(
+        self,
+        schema_name: str,
+        base_schema_name: str,
+    ) -> bool:
+        """
+        Flatten a schema that uses allOf inheritance by merging properties.
+
+        Converts:
+            schema_a:
+              allOf:
+                - $ref: '#/components/schemas/schema_b'
+                - properties: {...}
+
+        To:
+            schema_a:
+              type: object
+              properties:
+                (all from schema_b + all from original schema_a)
+
+        Args:
+            schema_name: Name of the schema to flatten
+            base_schema_name: Name of the base schema referenced in allOf
+
+        Returns:
+            True if the schema was flattened, False otherwise
+        """
+        schemas = self.spec.get("components", {}).get("schemas", {})
+
+        if schema_name not in schemas:
+            self.changes.append(
+                f"⚠️  Schema '{schema_name}' not found - skipping"
+            )
+            return False
+
+        if base_schema_name not in schemas:
+            self.changes.append(
+                f"⚠️  Base schema '{base_schema_name}' not found - skipping"
+            )
+            return False
+
+        schema = schemas[schema_name]
+        base_schema = schemas[base_schema_name]
+
+        if "allOf" not in schema:
+            self.changes.append(
+                f"ℹ️  Schema '{schema_name}' does not use allOf - skipping"
+            )
+            return False
+
+        # Extract all properties from base schema
+        base_properties = base_schema.get("properties", {}).copy()
+
+        # Extract properties from the inline schema in allOf
+        all_of_items = schema.get("allOf", [])
+        inline_properties = {}
+        for item in all_of_items:
+            if isinstance(item, dict) and "properties" in item:
+                inline_properties.update(item.get("properties", {}))
+
+        # Merge all properties
+        merged_properties = {**base_properties, **inline_properties}
+
+        # Replace the schema structure
+        schema["type"] = "object"
+        schema["properties"] = merged_properties
+        schema["additionalProperties"] = True
+
+        # Add a type property with a fixed value matching the schema name
+        # Convert schema_name from snake_case to the enum value (e.g., pipeline_ref_target)
+        if "type" not in schema.get("properties", {}):
+            schema["properties"]["type"] = {
+                "type": "string",
+                "enum": [schema_name],
+                "description": f"Type discriminator for {schema_name}"
+            }
+
+        # Keep discriminator if it exists in base
+        if "discriminator" in base_schema and "discriminator" not in schema:
+            schema["discriminator"] = base_schema["discriminator"]
+
+        # Remove allOf
+        del schema["allOf"]
+
+        self.changes.append(
+            f"✓ Flattened schema '{schema_name}' with {len(merged_properties)} properties"
+        )
+        return True
+
     def add_discriminator_mapping(
         self,
         schema_name: str,
@@ -277,6 +366,11 @@ class OpenAPIPatcher:
             )
         elif patch_type == "set_nullable":
             return self.set_nullable(patch["schema"], patch["property"])
+        elif patch_type == "flatten_schema":
+            return self.flatten_schema(
+                patch["schema"],
+                patch["baseSchema"],
+            )
         elif patch_type == "add_discriminator_mapping":
             return self.add_discriminator_mapping(
                 patch["schema"],
