@@ -31291,13 +31291,17 @@
                   },
                   {
                     "$ref": "#/components/schemas/pipeline_commit_target"
+                  },
+                  {
+                    "$ref": "#/components/schemas/pipeline_pullrequest_target"
                   }
                 ],
                 "discriminator": {
                   "propertyName": "type",
                   "mapping": {
                     "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
-                    "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
+                    "pipeline_commit_target": "#/components/schemas/pipeline_commit_target",
+                    "pipeline_pullrequest_target": "#/components/schemas/pipeline_pullrequest_target"
                   }
                 }
               },
@@ -31572,7 +31576,8 @@
                   "tags",
                   "bookmarks",
                   "default",
-                  "custom"
+                  "custom",
+                  "pull-requests"
                 ],
                 "type": "string",
                 "description": "The type of selector."
@@ -39257,6 +39262,20 @@
             "additionalProperties": true
           }
         ]
+      },
+      "pipeline_pullrequest_target": {
+        "type": "object",
+        "description": "A pipeline pull request target (placeholder - not fully documented in spec)",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "pipeline_pullrequest_target"
+            ],
+            "description": "Type discriminator for pipeline_pullrequest_target"
+          }
+        },
+        "additionalProperties": true
       }
     }
   }

@@ -1,11 +1,10 @@
-# PipelineSelector
+# PipelinePullrequestTarget
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**r#type** | Option<**Type**> | The type of selector. (enum: branches, tags, bookmarks, default, custom, pull-requests) | [optional]
-**pattern** | Option<**String**> | The name of the matching pipeline definition. | [optional]
+**r#type** | Option<**Type**> | Type discriminator for pipeline_pullrequest_target (enum: pipeline_pullrequest_target) | [optional]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

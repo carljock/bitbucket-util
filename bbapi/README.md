@@ -528,6 +528,7 @@ Class | Method | HTTP request | Description
  - [PipelineError](docs/PipelineError.md)
  - [PipelineImage](docs/PipelineImage.md)
  - [PipelineKnownHost](docs/PipelineKnownHost.md)
+ - [PipelinePullrequestTarget](docs/PipelinePullrequestTarget.md)
  - [PipelineRefTarget](docs/PipelineRefTarget.md)
  - [PipelineRunner](docs/PipelineRunner.md)
  - [PipelineRunnerOauthClient](docs/PipelineRunnerOauthClient.md)

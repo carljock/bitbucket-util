@@ -262,6 +262,8 @@ pub mod pipeline_image;
 pub use self::pipeline_image::PipelineImage;
 pub mod pipeline_known_host;
 pub use self::pipeline_known_host::PipelineKnownHost;
+pub mod pipeline_pullrequest_target;
+pub use self::pipeline_pullrequest_target::PipelinePullrequestTarget;
 pub mod pipeline_ref_target;
 pub use self::pipeline_ref_target::PipelineRefTarget;
 pub mod pipeline_runner;

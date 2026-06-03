@@ -370,7 +370,7 @@ impl BitbucketClient {
         creator_uuid: Option<&str>,
         limit: Option<i32>,
     ) -> Result<Vec<crate::model::PipelineRow>, BbcliError> {
-        let limit = limit.unwrap_or(20);
+        let page_size = 50i32;
         let mut page = apis::pipelines_api::get_pipelines_for_repository(
             &self.config,
             workspace_slug,
@@ -387,7 +387,7 @@ impl BitbucketClient {
             status,
             None,
             None,
-            Some(limit),
+            Some(page_size),
         )
         .await
         .map_err(|err| map_sdk_error("list pipelines", err))?;
@@ -395,9 +395,12 @@ impl BitbucketClient {
         let mut pipelines = pipeline_rows_from_values(page.values.take().unwrap_or_default());
         let mut next = page.next.take();
 
+        // If limit is None, fetch all pages. Otherwise, stop when we have enough.
         while let Some(next_url) = next {
-            if pipelines.len() >= limit as usize {
-                break;
+            if let Some(l) = limit {
+                if pipelines.len() >= l as usize {
+                    break;
+                }
             }
 
             let mut next_page: models::PaginatedPipelines = self
@@ -410,7 +413,14 @@ impl BitbucketClient {
             next = next_page.next.take();
         }
 
-        pipelines.truncate(limit as usize);
+        // Truncate to limit if specified
+        if let Some(l) = limit {
+            pipelines.truncate(l as usize);
+        }
+
+        // Sort by build_number in descending order (newest first)
+        pipelines.sort_by(|a, b| b.build_number.cmp(&a.build_number));
+
         Ok(pipelines)
     }
 

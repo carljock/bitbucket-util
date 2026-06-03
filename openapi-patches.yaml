@@ -90,6 +90,32 @@ patches:
     type: "remove_schema_discriminator"
     schema: "pipeline_commit_target"
 
+  - name: "Flatten pipeline_pullrequest_target schema"
+    reason: |
+      Similar to pipeline_ref_target and pipeline_commit_target, flatten
+      pipeline_pullrequest_target to include all properties from the base schema.
+    type: "flatten_schema"
+    schema: "pipeline_pullrequest_target"
+    baseSchema: "pipeline_target"
+
+  - name: "Remove discriminator from flattened pipeline_pullrequest_target"
+    reason: |
+      After flattening, pipeline_pullrequest_target should be a concrete struct, not a
+      discriminated union. The discriminator was inherited from the base
+      pipeline_target schema during flattening, but it shouldn't be there.
+    type: "remove_schema_discriminator"
+    schema: "pipeline_pullrequest_target"
+
+  - name: "Add pull-requests to pipeline_selector type enum"
+    reason: |
+      The Bitbucket API can return pipelines with selector type "pull-requests" but
+      the OpenAPI spec only includes "branches", "tags", "bookmarks", "default", and "custom".
+      Add "pull-requests" to the enum so deserialization doesn't fail.
+    type: "add_enum_value"
+    schema: "pipeline_selector"
+    property: "type"
+    value: "pull-requests"
+
   - name: "Fix pipeline_trigger required type field"
     reason: |
       Similar to comment_resolution and parent comments, the API returns
@@ -210,7 +236,7 @@ patches:
       without fields.
 
       Change it to use oneOf with the concrete types (pipeline_ref_target,
-      pipeline_commit_target) and add a discriminator mapping. This allows
-      the generator to properly handle the discriminated union with all fields
-      in the SDK's Pipeline.target field.
+      pipeline_commit_target, pipeline_pullrequest_target) and add a discriminator
+      mapping. This allows the generator to properly handle the discriminated union
+      with all fields in the SDK's Pipeline.target field.
     type: "fix_pipeline_target"

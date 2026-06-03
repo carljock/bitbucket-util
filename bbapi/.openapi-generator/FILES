@@ -143,6 +143,7 @@ docs/PipelineConfigurationSource.md
 docs/PipelineError.md
 docs/PipelineImage.md
 docs/PipelineKnownHost.md
+docs/PipelinePullrequestTarget.md
 docs/PipelineRefTarget.md
 docs/PipelineRunner.md
 docs/PipelineRunnerOauthClient.md
@@ -431,6 +432,7 @@ src/models/pipeline_configuration_source.rs
 src/models/pipeline_error.rs
 src/models/pipeline_image.rs
 src/models/pipeline_known_host.rs
+src/models/pipeline_pullrequest_target.rs
 src/models/pipeline_ref_target.rs
 src/models/pipeline_runner.rs
 src/models/pipeline_runner_oauth_client.rs

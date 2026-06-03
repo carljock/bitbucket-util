@@ -18,6 +18,8 @@ pub enum PipelineTarget {
     PipelineRefTarget(models::PipelineRefTarget),
     #[serde(rename="pipeline_commit_target")]
     PipelineCommitTarget(models::PipelineCommitTarget),
+    #[serde(rename="pipeline_pullrequest_target")]
+    PipelinePullrequestTarget(models::PipelinePullrequestTarget),
 }
 
 impl Default for PipelineTarget {

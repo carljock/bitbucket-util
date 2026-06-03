@@ -11,44 +11,32 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
+/// PipelinePullrequestTarget : A pipeline pull request target (placeholder - not fully documented in spec)
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PipelineSelector {
-    /// The type of selector.
+pub struct PipelinePullrequestTarget {
+    /// Type discriminator for pipeline_pullrequest_target
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub r#type: Option<Type>,
-    /// The name of the matching pipeline definition.
-    #[serde(rename = "pattern", skip_serializing_if = "Option::is_none")]
-    pub pattern: Option<String>,
 }
 
-impl PipelineSelector {
-    pub fn new() -> PipelineSelector {
-        PipelineSelector {
+impl PipelinePullrequestTarget {
+    /// A pipeline pull request target (placeholder - not fully documented in spec)
+    pub fn new() -> PipelinePullrequestTarget {
+        PipelinePullrequestTarget {
             r#type: None,
-            pattern: None,
         }
     }
 }
-/// The type of selector.
+/// Type discriminator for pipeline_pullrequest_target
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Type {
-    #[serde(rename = "branches")]
-    Branches,
-    #[serde(rename = "tags")]
-    Tags,
-    #[serde(rename = "bookmarks")]
-    Bookmarks,
-    #[serde(rename = "default")]
-    Default,
-    #[serde(rename = "custom")]
-    Custom,
-    #[serde(rename = "pull-requests")]
-    PullRequests,
+    #[serde(rename = "pipeline_pullrequest_target")]
+    PipelinePullrequestTarget,
 }
 
 impl Default for Type {
     fn default() -> Type {
-        Self::Branches
+        Self::PipelinePullrequestTarget
     }
 }
 

@@ -239,6 +239,7 @@ class OpenAPIPatcher:
         target_property["oneOf"] = [
             {"$ref": "#/components/schemas/pipeline_ref_target"},
             {"$ref": "#/components/schemas/pipeline_commit_target"},
+            {"$ref": "#/components/schemas/pipeline_pullrequest_target"},
         ]
 
         # Add discriminator for the oneOf
@@ -247,6 +248,7 @@ class OpenAPIPatcher:
             "mapping": {
                 "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
                 "pipeline_commit_target": "#/components/schemas/pipeline_commit_target",
+                "pipeline_pullrequest_target": "#/components/schemas/pipeline_pullrequest_target",
             }
         }
 
@@ -415,6 +417,77 @@ class OpenAPIPatcher:
         )
         return True
 
+    def add_enum_value(self, schema_name: str, property_path: str, value: str) -> bool:
+        """
+        Add a value to an enum property in a schema.
+
+        Args:
+            schema_name: Name of the schema to modify
+            property_path: Path to the enum property (e.g., "type" or "properties.type")
+            value: The enum value to add
+
+        Returns:
+            True if value was added, False otherwise
+        """
+        schemas = self.spec.get("components", {}).get("schemas", {})
+
+        if schema_name not in schemas:
+            self.changes.append(
+                f"⚠️  Schema '{schema_name}' not found - skipping"
+            )
+            return False
+
+        schema = schemas[schema_name]
+
+        # Navigate to the property, handling allOf and nested paths
+        current = schema
+        property_parts = property_path.split(".")
+
+        # First, check if we need to look in allOf
+        if "allOf" in schema:
+            for item in schema["allOf"]:
+                if isinstance(item, dict) and "properties" in item:
+                    current = item
+                    break
+
+        # Navigate through property path
+        for i, part in enumerate(property_parts[:-1]):
+            if part == "properties":
+                current = current.get("properties", {})
+            else:
+                current = current.get(part, {})
+
+        # Get the final property
+        final_key = property_parts[-1]
+        if "properties" in current and final_key in current["properties"]:
+            enum_prop = current["properties"][final_key]
+        elif final_key in current:
+            enum_prop = current[final_key]
+        else:
+            self.changes.append(
+                f"⚠️  Property '{property_path}' not found in '{schema_name}' - skipping"
+            )
+            return False
+
+        # Add value to enum
+        if "enum" not in enum_prop:
+            self.changes.append(
+                f"⚠️  Property '{property_path}' in '{schema_name}' is not an enum - skipping"
+            )
+            return False
+
+        if value in enum_prop["enum"]:
+            self.changes.append(
+                f"ℹ️  Value '{value}' already in enum for '{property_path}' in '{schema_name}' - skipping"
+            )
+            return False
+
+        enum_prop["enum"].append(value)
+        self.changes.append(
+            f"✓ Added enum value '{value}' to '{property_path}' in schema '{schema_name}'"
+        )
+        return True
+
     def remove_schema_discriminator(self, schema_name: str) -> bool:
         """
         Remove the discriminator from a schema.
@@ -489,6 +562,8 @@ class OpenAPIPatcher:
             )
         elif patch_type == "remove_schema_discriminator":
             return self.remove_schema_discriminator(patch["schema"])
+        elif patch_type == "add_enum_value":
+            return self.add_enum_value(patch["schema"], patch["property"], patch["value"])
         else:
             self.changes.append(
                 f"⚠️  Unknown patch type '{patch_type}' in '{patch_name}' - skipping"
