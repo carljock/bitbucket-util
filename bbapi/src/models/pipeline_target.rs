@@ -14,20 +14,34 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum PipelineTarget {
-    #[serde(rename="pipeline_commit_target")]
-    PipelineCommitTarget {
-    },
     #[serde(rename="pipeline_ref_target")]
-    PipelineRefTarget {
-    },
+    PipelineRefTarget(models::PipelineRefTarget),
+    #[serde(rename="pipeline_commit_target")]
+    PipelineCommitTarget(models::PipelineCommitTarget),
 }
 
 impl Default for PipelineTarget {
     fn default() -> Self {
-        Self::PipelineCommitTarget {
-        }
-        
+        Self::PipelineRefTarget(Default::default())
     }
 }
 
+/// The type of reference (branch/tag).
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+pub enum RefType {
+    #[serde(rename = "branch")]
+    Branch,
+    #[serde(rename = "tag")]
+    Tag,
+    #[serde(rename = "named_branch")]
+    NamedBranch,
+    #[serde(rename = "bookmark")]
+    Bookmark,
+}
+
+impl Default for RefType {
+    fn default() -> RefType {
+        Self::Branch
+    }
+}
 

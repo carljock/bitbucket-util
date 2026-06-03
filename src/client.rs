@@ -443,114 +443,86 @@ impl BitbucketClient {
         selector_pattern: Option<&str>,
         variables: Option<Vec<(String, String, bool)>>,
     ) -> Result<crate::model::PipelineDetailedRow, BbcliError> {
-        // Build the request JSON with proper discriminated union structure
-        let mut target_json = serde_json::json!({
-            "type": "pipeline_ref_target",
-            "ref_type": ref_type,
-            "ref_name": ref_name,
-        });
+        // Build the ref_type enum
+        let ref_type_enum = match ref_type {
+            "tag" => models::pipeline_ref_target::RefType::Tag,
+            "named_branch" => models::pipeline_ref_target::RefType::NamedBranch,
+            "bookmark" => models::pipeline_ref_target::RefType::Bookmark,
+            _ => models::pipeline_ref_target::RefType::Branch,
+        };
 
-        if let Some(commit) = commit_hash {
-            target_json["commit"] = serde_json::json!({
-                "type": "commit",
-                "hash": commit,
-            });
-        }
+        // Build optional commit
+        let commit = if let Some(hash) = commit_hash {
+            let mut c = models::Commit::new();
+            c.hash = Some(hash.to_string());
+            Some(Box::new(c))
+        } else {
+            None
+        };
 
-        if selector_type.is_some() || selector_pattern.is_some() {
-            let mut selector_obj = serde_json::json!({});
-            if let Some(sel_type) = selector_type {
-                selector_obj["type"] = serde_json::Value::String(sel_type.to_string());
-            }
+        // Build optional selector
+        let selector = if selector_type.is_some() || selector_pattern.is_some() {
+            let mut sel = models::PipelineSelector::new();
             if let Some(pattern) = selector_pattern {
-                selector_obj["pattern"] = serde_json::Value::String(pattern.to_string());
+                sel.pattern = Some(pattern.to_string());
             }
-            target_json["selector"] = selector_obj;
-        }
+            if let Some(sel_type) = selector_type {
+                // Try to map to known selector types
+                sel.r#type = match sel_type {
+                    "branches" => Some(models::pipeline_selector::Type::Branches),
+                    "tags" => Some(models::pipeline_selector::Type::Tags),
+                    "bookmarks" => Some(models::pipeline_selector::Type::Bookmarks),
+                    "default" => Some(models::pipeline_selector::Type::Default),
+                    "custom" => Some(models::pipeline_selector::Type::Custom),
+                    _ => Some(models::pipeline_selector::Type::Custom),
+                };
+            }
+            Some(Box::new(sel))
+        } else {
+            None
+        };
 
-        // Deserialize to PipelineRefTarget to validate the structure
-        let _target: models::PipelineRefTarget = serde_json::from_value(target_json.clone())
-            .map_err(|e| BbcliError::Parse {
-                context: "parse pipeline ref target",
-                message: e.to_string(),
-            })?;
+        // Build the PipelineRefTarget variant
+        let pipeline_ref_target = models::PipelineRefTarget::PipelineRefTarget {
+            ref_type: Some(ref_type_enum),
+            ref_name: Some(ref_name.to_string()),
+            commit,
+            selector,
+        };
 
-        // Now build the Pipeline request with the JSON target
-        // (We'll send raw JSON instead of using SDK structures for now)
-        let mut pipeline_json = serde_json::json!({
-            "type": "pipeline",
-            "target": target_json,
-        });
+        // Wrap in PipelineTarget enum
+        let target = models::PipelineTarget::PipelineRefTarget(pipeline_ref_target);
+
+        // Build pipeline request
+        let mut pipeline = models::Pipeline::new();
+        pipeline.r#type = Some("pipeline".to_string());
+        pipeline.target = Some(Box::new(target));
 
         if let Some(vars) = variables {
-            let vars_json: Vec<_> = vars.iter()
+            let vars_obj: Vec<models::PipelineVariable> = vars
+                .iter()
                 .map(|(key, value, secured)| {
-                    serde_json::json!({
-                        "type": "pipeline_variable",
-                        "key": key,
-                        "value": value,
-                        "secured": secured,
-                    })
+                    let mut var = models::PipelineVariable::new();
+                    var.key = Some(key.clone());
+                    var.value = Some(value.clone());
+                    var.secured = Some(*secured);
+                    var
                 })
                 .collect();
-            pipeline_json["variables"] = serde_json::Value::Array(vars_json);
+            pipeline.variables = Some(vars_obj);
         }
 
-        // Send the request directly with raw JSON
-        let uri = format!(
-            "{}/repositories/{}/{}/pipelines",
-            self.config.base_path,
-            apis::urlencode(workspace_slug),
-            apis::urlencode(repo_slug)
-        );
+        // Use SDK method
+        let result = apis::pipelines_api::create_pipeline_for_repository(
+            &self.config,
+            workspace_slug,
+            repo_slug,
+            pipeline,
+        )
+        .await
+        .map_err(|err| map_sdk_error("trigger pipeline", err))?;
 
-        let mut req_builder = self.config.client.post(&uri);
-
-        if let Some(user_agent) = &self.config.user_agent {
-            req_builder = req_builder.header("User-Agent", user_agent.clone());
-        }
-
-        if let Some((username, password)) = &self.config.basic_auth {
-            req_builder = req_builder.basic_auth(username, password.clone());
-        }
-
-        let req = req_builder
-            .json(&pipeline_json)
-            .build()
-            .map_err(|e| BbcliError::Network {
-                context: "build trigger pipeline request",
-                message: e.to_string(),
-            })?;
-
-        let resp = self.config.client.execute(req).await.map_err(|e| {
-            BbcliError::Network {
-                context: "execute trigger pipeline request",
-                message: e.to_string(),
-            }
-        })?;
-
-        let status = resp.status();
-        let body = resp.text().await.map_err(|e| BbcliError::Network {
-            context: "read trigger pipeline response",
-            message: e.to_string(),
-        })?;
-
-        if !status.is_success() {
-            return Err(BbcliError::Api {
-                context: "trigger pipeline",
-                status: Some(status.as_u16()),
-                message: compact_api_message(&body),
-            });
-        }
-
-        let pipeline: models::Pipeline = serde_json::from_str(&body).map_err(|e| {
-            BbcliError::Parse {
-                context: "parse trigger pipeline response",
-                message: e.to_string(),
-            }
-        })?;
-
-        Ok(pipeline_to_detailed_row(pipeline))
+        Ok(pipeline_to_detailed_row(result))
     }
 
     pub async fn stop_pipeline(

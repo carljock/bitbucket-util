@@ -71,3 +71,15 @@ patches:
     type: "flatten_schema"
     schema: "pipeline_commit_target"
     baseSchema: "pipeline_target"
+
+  - name: "Fix Pipeline.target to use concrete types"
+    reason: |
+      The Pipeline schema's target field currently references the empty
+      pipeline_target base type, causing the generator to create enum variants
+      without fields.
+
+      Change it to use oneOf with the concrete types (pipeline_ref_target,
+      pipeline_commit_target) and add a discriminator mapping. This allows
+      the generator to properly handle the discriminated union with all fields
+      in the SDK's Pipeline.target field.
+    type: "fix_pipeline_target"

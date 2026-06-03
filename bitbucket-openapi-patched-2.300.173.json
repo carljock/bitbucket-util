@@ -31285,7 +31285,21 @@
                 "$ref": "#/components/schemas/repository"
               },
               "target": {
-                "$ref": "#/components/schemas/pipeline_target"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/pipeline_ref_target"
+                  },
+                  {
+                    "$ref": "#/components/schemas/pipeline_commit_target"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "type",
+                  "mapping": {
+                    "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
+                    "pipeline_commit_target": "#/components/schemas/pipeline_commit_target"
+                  }
+                }
               },
               "trigger": {
                 "$ref": "#/components/schemas/pipeline_trigger"

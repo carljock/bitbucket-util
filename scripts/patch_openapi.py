@@ -183,6 +183,82 @@ class OpenAPIPatcher:
         )
         return True
 
+    def fix_pipeline_target(self) -> bool:
+        """
+        Fix Pipeline.target to use concrete pipeline target types.
+
+        Changes Pipeline.target from referencing pipeline_target (base type
+        with empty variants) to using oneOf with pipeline_ref_target and
+        pipeline_commit_target (concrete types with full fields).
+
+        Returns:
+            True if the fix was applied, False otherwise
+        """
+        schemas = self.spec.get("components", {}).get("schemas", {})
+
+        if "pipeline" not in schemas:
+            self.changes.append(
+                f"⚠️  Schema 'pipeline' not found - skipping fix_pipeline_target"
+            )
+            return False
+
+        pipeline_schema = schemas["pipeline"]
+
+        # Handle allOf structure (Pipeline inherits from object)
+        all_of = pipeline_schema.get("allOf", [])
+        target_property = None
+        target_property_index = None
+
+        for i, item in enumerate(all_of):
+            if isinstance(item, dict) and "properties" in item:
+                props = item.get("properties", {})
+                if "target" in props:
+                    target_property = props["target"]
+                    target_property_index = i
+                    break
+
+        if target_property is None:
+            # Try direct properties (if Pipeline doesn't use allOf)
+            properties = pipeline_schema.get("properties", {})
+            if "target" not in properties:
+                self.changes.append(
+                    f"⚠️  Pipeline.target not found - skipping fix_pipeline_target"
+                )
+                return False
+            target_property = properties["target"]
+            target_property_index = None
+
+        # Check if it's already using a oneOf
+        if "oneOf" in target_property:
+            self.changes.append(
+                f"ℹ️  Pipeline.target already uses oneOf - skipping fix_pipeline_target"
+            )
+            return False
+
+        # Replace the $ref with oneOf using concrete types
+        target_property["oneOf"] = [
+            {"$ref": "#/components/schemas/pipeline_ref_target"},
+            {"$ref": "#/components/schemas/pipeline_commit_target"},
+        ]
+
+        # Add discriminator for the oneOf
+        target_property["discriminator"] = {
+            "propertyName": "type",
+            "mapping": {
+                "pipeline_ref_target": "#/components/schemas/pipeline_ref_target",
+                "pipeline_commit_target": "#/components/schemas/pipeline_commit_target",
+            }
+        }
+
+        # Remove the old $ref if present
+        if "$ref" in target_property:
+            del target_property["$ref"]
+
+        self.changes.append(
+            f"✓ Fixed Pipeline.target to use oneOf with concrete types"
+        )
+        return True
+
     def flatten_schema(
         self,
         schema_name: str,
@@ -366,6 +442,8 @@ class OpenAPIPatcher:
             )
         elif patch_type == "set_nullable":
             return self.set_nullable(patch["schema"], patch["property"])
+        elif patch_type == "fix_pipeline_target":
+            return self.fix_pipeline_target()
         elif patch_type == "flatten_schema":
             return self.flatten_schema(
                 patch["schema"],
