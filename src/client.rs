@@ -487,25 +487,62 @@ impl BitbucketClient {
             pipeline_json["variables"] = serde_json::Value::Array(vars_json);
         }
 
-        eprintln!("DEBUG: Sending pipeline trigger request:\n{}", serde_json::to_string_pretty(&pipeline_json).unwrap_or_default());
 
-        // Parse back to Pipeline model for the API call
-        let pipeline: models::Pipeline = serde_json::from_value(pipeline_json.clone())
-            .map_err(|e| BbcliError::Parse {
-                context: "parse trigger pipeline json",
+        // Send the request directly with raw JSON to preserve all fields
+        let uri = format!(
+            "{}/repositories/{}/{}/pipelines",
+            self.config.base_path,
+            apis::urlencode(workspace_slug),
+            apis::urlencode(repo_slug)
+        );
+
+        let mut req_builder = self.config.client.post(&uri);
+
+        if let Some(user_agent) = &self.config.user_agent {
+            req_builder = req_builder.header("User-Agent", user_agent.clone());
+        }
+
+        if let Some((username, password)) = &self.config.basic_auth {
+            req_builder = req_builder.basic_auth(username, password.clone());
+        }
+
+        let req = req_builder
+            .json(&pipeline_json)
+            .build()
+            .map_err(|e| BbcliError::Network {
+                context: "build trigger pipeline request",
                 message: e.to_string(),
             })?;
 
-        let result = apis::pipelines_api::create_pipeline_for_repository(
-            &self.config,
-            workspace_slug,
-            repo_slug,
-            pipeline,
-        )
-        .await
-        .map_err(|err| map_sdk_error("trigger pipeline", err))?;
+        let resp = self.config.client.execute(req).await.map_err(|e| {
+            BbcliError::Network {
+                context: "execute trigger pipeline request",
+                message: e.to_string(),
+            }
+        })?;
 
-        Ok(pipeline_to_detailed_row(result))
+        let status = resp.status();
+        let body = resp.text().await.map_err(|e| BbcliError::Network {
+            context: "read trigger pipeline response",
+            message: e.to_string(),
+        })?;
+
+        if !status.is_success() {
+            return Err(BbcliError::Api {
+                context: "trigger pipeline",
+                status: Some(status.as_u16()),
+                message: compact_api_message(&body),
+            });
+        }
+
+        let pipeline: models::Pipeline = serde_json::from_str(&body).map_err(|e| {
+            BbcliError::Parse {
+                context: "parse trigger pipeline response",
+                message: e.to_string(),
+            }
+        })?;
+
+        Ok(pipeline_to_detailed_row(pipeline))
     }
 
     pub async fn stop_pipeline(
@@ -637,8 +674,8 @@ fn pull_request_comment_to_row(comment: models::PullrequestComment) -> crate::mo
             from: i.from,
             to: i.to,
         }),
-        created_on: comment.created_on,
-        updated_on: comment.updated_on,
+        created_on: comment.created_on.map(|dt| dt.to_string()),
+        updated_on: comment.updated_on.map(|dt| dt.to_string()),
     }
 }
 
@@ -761,7 +798,7 @@ fn repository_to_repo_row(workspace_slug: &str, repository: models::Repository) 
     let description = repository.description;
     let is_private = repository.is_private;
     let language = repository.language;
-    let updated_on = repository.updated_on;
+    let updated_on = repository.updated_on.map(|dt| dt.to_string());
     let main_branch = repository.mainbranch.and_then(|branch| branch.name);
     let (clone_https, clone_ssh) = extract_clone_urls(repository.links);
 
@@ -815,8 +852,8 @@ fn pull_request_to_row(
         draft: pull_request.draft,
         comment_count: pull_request.comment_count,
         task_count: pull_request.task_count,
-        created_on: pull_request.created_on,
-        updated_on: pull_request.updated_on,
+        created_on: pull_request.created_on.map(|dt| dt.to_string()),
+        updated_on: pull_request.updated_on.map(|dt| dt.to_string()),
     })
 }
 
@@ -898,8 +935,8 @@ fn pipeline_to_row(pipeline: models::Pipeline) -> Option<crate::model::PipelineR
         build_number,
         state,
         creator,
-        created_on: pipeline.created_on,
-        completed_on: pipeline.completed_on,
+        created_on: pipeline.created_on.map(|dt| dt.to_string()),
+        completed_on: pipeline.completed_on.map(|dt| dt.to_string()),
         target_ref_name,
         target_ref_type: target_ref_type.map(|s| s.to_string()),
         web_url,
@@ -971,8 +1008,8 @@ fn pipeline_to_detailed_row(pipeline: models::Pipeline) -> crate::model::Pipelin
         build_number,
         state,
         creator,
-        created_on: pipeline.created_on,
-        completed_on: pipeline.completed_on,
+        created_on: pipeline.created_on.map(|dt| dt.to_string()),
+        completed_on: pipeline.completed_on.map(|dt| dt.to_string()),
         target_ref_name,
         target_ref_type: target_ref_type.map(|s| s.to_string()),
         web_url,
@@ -1004,8 +1041,8 @@ fn pipeline_step_to_row(step: models::PipelineStep) -> crate::model::PipelineSte
     crate::model::PipelineStepRow {
         uuid,
         state,
-        started_on: step.started_on,
-        completed_on: step.completed_on,
+        started_on: step.started_on.map(|dt| dt.to_string()),
+        completed_on: step.completed_on.map(|dt| dt.to_string()),
         image_name,
     }
 }
